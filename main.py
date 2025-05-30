@@ -120,6 +120,22 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
+    
+   # Debug handler per callback non gestiti
+   async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+       query = update.callback_query
+       await query.answer()
+       logger.warning(f"Callback non gestito: {query.data}")
+       await query.edit_message_text(
+           f"⚠️ Funzione in sviluppo: {query.data}
+
+Torna al menu con /start",
+           parse_mode='HTML'
+       )
+   
+   # Aggiungi alla fine per catturare callback non gestiti
+   application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
+
     application.run_polling()
 
 if __name__ == '__main__':
