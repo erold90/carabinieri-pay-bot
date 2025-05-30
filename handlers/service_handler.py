@@ -887,7 +887,7 @@ service_conversation_handler = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_time_input)
         ],
         SERVICE_DETAILS: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mission_destination)
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_destination)
         ],
         TRAVEL_DETAILS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_travel_sheet_number)
