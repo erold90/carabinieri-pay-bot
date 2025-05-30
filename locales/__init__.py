@@ -1,1 +1,0 @@
-"""Locales module for CarabinieriPayBot"""
