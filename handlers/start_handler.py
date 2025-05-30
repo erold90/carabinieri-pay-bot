@@ -95,16 +95,16 @@ async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE,
         )
 
 async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User, db: Session):
-   """Send main dashboard"""
-   # Verifica se l'utente è configurato
-   if not user.rank or not user.command:
+    """Send main dashboard"""
+    # Verifica se l'utente è configurato
+    if not user.rank or not user.command:
        # Utente non configurato, mostra setup
        await send_welcome_setup(update, context, user)
        return
    
-   current_date = get_current_date()
-   current_month = current_date.month
-   current_year = current_date.year
+    current_date = get_current_date()
+    current_month = current_date.month
+    current_year = current_date.year
     current_date = get_current_date()
     current_month = current_date.month
     current_year = current_date.year
