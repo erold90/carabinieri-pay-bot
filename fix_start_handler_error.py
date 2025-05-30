@@ -1,3 +1,5 @@
+from telegram.ext import ContextTypes
+from telegram import Update
 #!/usr/bin/env python3
 import subprocess
 
