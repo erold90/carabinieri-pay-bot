@@ -22,8 +22,7 @@ from handlers.service_handler import (
     handle_service_type,
     handle_status_selection,
     handle_meals,
-    handle_meal_selection,
-    handle_mission_type,
+        handle_mission_type,
     handle_time_input
 )
 from handlers.overtime_handler import (

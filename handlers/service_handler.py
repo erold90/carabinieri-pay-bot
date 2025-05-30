@@ -904,5 +904,6 @@ service_conversation_handler = ConversationHandler(
             CallbackQueryHandler(handle_confirmation, pattern="^confirm_")
         ]
     },
-    fallbacks=[CommandHandler("start", start_command)]
+    fallbacks=[CommandHandler("start", start_command)],
+    per_message=False
 )
