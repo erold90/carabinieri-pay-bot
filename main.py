@@ -309,6 +309,44 @@ def main():
         pattern="^remove_route$"
     ))
 
+
+    # Handler per callback di modifica licenze
+    application.add_handler(CallbackQueryHandler(
+        handle_leave_edit, 
+        pattern="^(edit_current_leave_total|edit_current_leave_used|edit_previous_leave)$"
+    ))
+    
+    # Handler per gestione percorsi
+    application.add_handler(CallbackQueryHandler(
+        handle_route_action, 
+        pattern="^(add_route|remove_route)$"
+    ))
+    
+    # Handler per santo patrono
+    application.add_handler(CallbackQueryHandler(
+        handle_patron_saint, 
+        pattern="^set_patron_saint$"
+    ))
+    
+    # Handler per orario notifiche
+    application.add_handler(CallbackQueryHandler(
+        handle_reminder_time, 
+        pattern="^change_reminder_time$"
+    ))
+    
+    # Handler per toggle notifiche
+    application.add_handler(CallbackQueryHandler(
+        toggle_notification,
+        pattern="^(toggle_daily_reminder|toggle_overtime_limit|toggle_leave_expiry|toggle_travel_sheet)$"
+    ))
+    
+    # Handler per selezione pasti
+    application.add_handler(CallbackQueryHandler(
+        handle_meal_selection,
+        pattern="^(meal_lunch|meal_dinner|meal_confirm)$"
+    ))
+
+
 # Debug handler for unhandled callbacks
     async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
