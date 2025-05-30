@@ -117,19 +117,23 @@ def get_rank_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 def get_irpef_keyboard():
-    """Get IRPEF rate keyboard"""
-    rates = [23, 25, 27, 35, 43]
-    keyboard = []
-    
-    row = []
-    for rate in rates:
-        row.append(InlineKeyboardButton(
-            f"{rate}%",
-            callback_data=f"irpef_{rate}"
-        ))
-    keyboard.append(row)
+    """Get IRPEF rate keyboard with descriptions"""
+    keyboard = [
+        [
+            InlineKeyboardButton("23% (fino a 15k€)", callback_data="irpef_23"),
+            InlineKeyboardButton("25% (15-28k€)", callback_data="irpef_25")
+        ],
+        [
+            InlineKeyboardButton("27% (media)", callback_data="irpef_27"),
+            InlineKeyboardButton("35% (28-50k€)", callback_data="irpef_35")
+        ],
+        [
+            InlineKeyboardButton("43% (oltre 50k€)", callback_data="irpef_43")
+        ]
+    ]
     
     return InlineKeyboardMarkup(keyboard)
+
 
 def get_back_keyboard(callback_data="back"):
     """Get back button keyboard"""

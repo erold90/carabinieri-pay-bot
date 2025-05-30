@@ -143,15 +143,22 @@ async def show_rank_selection(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
 async def show_irpef_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show IRPEF selection"""
+    """Show IRPEF selection with guide"""
     text = "💰 <b>SELEZIONA L'ALIQUOTA IRPEF</b>\n\n"
-    text += "Seleziona la tua aliquota IRPEF attuale:"
+    text += "📊 <b>GUIDA SCAGLIONI IRPEF 2024:</b>\n"
+    text += "• Fino a €15.000 di reddito: <b>23%</b>\n"
+    text += "• Da €15.001 a €28.000: <b>25%</b>\n"
+    text += "• Da €28.001 a €50.000: <b>35%</b>\n"
+    text += "• Oltre €50.000: <b>43%</b>\n\n"
+    text += "💡 <i>Puoi verificare la tua aliquota sul cedolino stipendio</i>\n\n"
+    text += "Seleziona la tua aliquota attuale:"
     
     await update.callback_query.edit_message_text(
         text,
         parse_mode='HTML',
         reply_markup=get_irpef_keyboard()
     )
+
 
 async def update_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Update user rank with DB verification"""
