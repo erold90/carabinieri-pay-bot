@@ -40,7 +40,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 username=user.username if user.username else "",
                 first_name=user.first_name if user.first_name else "",
                 last_name=user.last_name if user.last_name else ""
-            )
+            ,
+                irpef_rate=0.27,
+                base_shift_hours=6,
+                parameter=108.5,
+                current_year_leave=32,
+                current_year_leave_used=0,
+                previous_year_leave=0)
             db.add(db_user)
             db.commit()
             
