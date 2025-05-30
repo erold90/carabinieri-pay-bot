@@ -198,30 +198,30 @@ def main():
     application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
-    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), settings_callback, pattern="^settings_"))
     
     # Specific handlers for service callbacks
     application.add_handler(CallbackQueryHandler(handle_service_type, pattern="^service_type_"))
     application.add_handler(CallbackQueryHandler(handle_status_selection, pattern="^status_"))
     application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meals_"))
-    application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), handle_mission_type, pattern="^mission_type_"))
     
     # Rank and IRPEF selection handlers
     application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
-    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), update_irpef, pattern="^irpef_"))
     
     # Navigation handlers
     application.add_handler(CallbackQueryHandler(start_command, pattern="^back_to_menu$"))
     application.add_handler(CallbackQueryHandler(settings_command, pattern="^back_to_settings$"))
     application.add_handler(CallbackQueryHandler(leave_command, pattern="^back_to_leave$"))
     application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^back_to_fv$"))
-    application.add_handler(CallbackQueryHandler(overtime_command, pattern="^back_overtime$"))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), overtime_command, pattern="^back_overtime$"))
 
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^meal_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^setup_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
-    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), handle_missing_callbacks, pattern="^back$"))
 
     # Leave edit handlers
     application.add_handler(CallbackQueryHandler(
@@ -242,7 +242,7 @@ def main():
     # === HANDLER PER TUTTI I CALLBACK MANCANTI ===
 
     # toggle_ callbacks (4 items)
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^(toggle_travel_sheet|toggle_leave_expiry|toggle_overtime_limit|toggle_daily_reminder)$"
     ))
 
@@ -265,27 +265,27 @@ def main():
     ))
 
     # Handler per callback di modifica licenze
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^(edit_current_leave_total|edit_current_leave_used|edit_previous_leave)$"
     ))
     
     # Handler per gestione percorsi
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^(add_route|remove_route)$"
     ))
     
     # Handler per santo patrono
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^set_patron_saint$"
     ))
     
     # Handler per orario notifiche
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^change_reminder_time$"
     ))
     
     # Handler per toggle notifiche
-    application.add_handler(CallbackQueryHandler(
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), 
         pattern="^(toggle_daily_reminder|toggle_overtime_limit|toggle_leave_expiry|toggle_travel_sheet)$"
     ))
     
@@ -306,7 +306,7 @@ def main():
         )
     
     # Add at the end to catch unhandled callbacks
-    application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer()debug_unhandled_callback))
     
     # Error handler
     async def error_handler(update: Update, context):
