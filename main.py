@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Deploy forzato: 2025-05-31 00:49:55
 # -*- coding: utf-8 -*-
 """
 CarabinieriPayBot - Bot Telegram per il calcolo stipendi Carabinieri
