@@ -18,9 +18,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         user = update.message.from_user
         chat_id = update.message.chat_id
+        reply_func = update.message.reply_text
     elif update.callback_query:
         user = update.callback_query.from_user
         chat_id = update.callback_query.message.chat_id
+        reply_func = update.callback_query.message.reply_text
         await update.callback_query.answer()
     else:
         return
@@ -35,9 +37,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             db_user = User(
                 telegram_id=str(user.id),
                 chat_id=str(chat_id),
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name
+                username=user.username if user.username else "",
+                first_name=user.first_name if user.first_name else "",
+                last_name=user.last_name if user.last_name else ""
             )
             db.add(db_user)
             db.commit()
@@ -54,14 +56,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await send_dashboard(update, context, db_user, db)
     except Exception as e:
         print(f"Errore in start_command: {e}")
+        import traceback
+        traceback.print_exc()
+        
         error_message = "❌ Si è verificato un errore. Riprova con /start"
-        if update.message:
-            await (update.message or update.callback_query.message).reply_text(error_message)
-        elif update.callback_query:
-            await update.callback_query.message.reply_text(error_message)
+        await reply_func(error_message, parse_mode='HTML')
     finally:
         db.close()
-
 
 async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User):
     """Send welcome message for new users"""
@@ -80,11 +81,18 @@ async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE,
         [InlineKeyboardButton("⚙️ Configura ora", callback_data="setup_start")]
     ]
     
-    await (update.message or update.callback_query.message).reply_text(
-        welcome_text,
-        parse_mode='HTML',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    if update.message:
+        await update.message.reply_text(
+            welcome_text,
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    else:
+        await update.callback_query.message.reply_text(
+            welcome_text,
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User, db: Session):
     """Send main dashboard"""
@@ -92,8 +100,21 @@ async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     current_month = current_date.month
     current_year = current_date.year
     
-    # Calculate month totals
-    month_data = calculate_month_totals(db, user.id, current_month, current_year)
+    # Calculate month totals - con gestione errori
+    try:
+        month_data = calculate_month_totals(db, user.id, current_month, current_year)
+    except:
+        month_data = {
+            'days_worked': 0,
+            'total_hours': 0,
+            'paid_overtime': 0,
+            'paid_hours': 0,
+            'unpaid_overtime': 0,
+            'unpaid_hours': 0,
+            'allowances': 0,
+            'missions': 0,
+            'total': 0
+        }
     
     # Get unpaid overtime
     unpaid_overtime = db.query(Overtime).filter(
@@ -101,8 +122,8 @@ async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, use
         Overtime.is_paid == False
     ).all()
     
-    unpaid_hours = sum(ot.hours for ot in unpaid_overtime)
-    unpaid_amount = sum(ot.amount for ot in unpaid_overtime)
+    unpaid_hours = sum(ot.hours for ot in unpaid_overtime) if unpaid_overtime else 0
+    unpaid_amount = sum(ot.amount for ot in unpaid_overtime) if unpaid_overtime else 0
     
     # Get unpaid travel sheets
     unpaid_sheets = db.query(TravelSheet).filter(
@@ -110,8 +131,8 @@ async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, use
         TravelSheet.is_paid == False
     ).all()
     
-    sheets_count = len(unpaid_sheets)
-    sheets_amount = sum(sheet.amount for sheet in unpaid_sheets)
+    sheets_count = len(unpaid_sheets) if unpaid_sheets else 0
+    sheets_amount = sum(sheet.amount for sheet in unpaid_sheets) if unpaid_sheets else 0
     
     # Calculate remaining leaves
     remaining_current = user.current_year_leave - user.current_year_leave_used
@@ -120,7 +141,7 @@ async def send_dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE, use
     dashboard_text = f"""
 🏠 <b>CARABINIERI PAY BOT v3.0</b>
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Bentornato <b>{user.rank or 'Collega'} {user.first_name}</b>
+Bentornato <b>{user.rank or 'Collega'} {user.first_name or ''}</b>
 Comando: <b>{user.command or 'Da configurare'}</b>
 
 💰 <b>{current_date.strftime('%B %Y').upper()}</b> (aggiornato ore {datetime.now().strftime('%H:%M')})
@@ -179,7 +200,7 @@ Comando: <b>{user.command or 'Da configurare'}</b>
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
-        await (update.message or update.callback_query.message).reply_text(
+        await update.message.reply_text(
             dashboard_text,
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup(keyboard)

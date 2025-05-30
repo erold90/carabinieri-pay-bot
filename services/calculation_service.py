@@ -137,3 +137,64 @@ def calculate_month_totals(db, user_id, month, year):
     # This function remains the same as before
     # ... (code from previous turn)
     pass
+
+
+
+def calculate_month_totals(db, user_id, month, year):
+    """Calculate monthly totals with error handling"""
+    try:
+        # Get services for the month
+        from sqlalchemy import extract
+        from database.models import Service
+        
+        services = db.query(Service).filter(
+            Service.user_id == user_id,
+            extract('month', Service.date) == month,
+            extract('year', Service.date) == year
+        ).all()
+        
+        # Initialize totals
+        result = {
+            'days_worked': len(services),
+            'total_hours': sum(s.total_hours for s in services) if services else 0,
+            'paid_overtime': 0,
+            'paid_hours': 0,
+            'unpaid_overtime': 0,
+            'unpaid_hours': 0,
+            'allowances': sum(s.allowances_amount for s in services) if services else 0,
+            'missions': sum(s.mission_amount for s in services) if services else 0,
+            'total': sum(s.total_amount for s in services) if services else 0
+        }
+        
+        # Get overtime data
+        from database.models import Overtime
+        overtimes = db.query(Overtime).filter(
+            Overtime.user_id == user_id,
+            extract('month', Overtime.date) == month,
+            extract('year', Overtime.date) == year
+        ).all()
+        
+        for ot in overtimes:
+            if ot.is_paid:
+                result['paid_overtime'] += ot.amount
+                result['paid_hours'] += ot.hours
+            else:
+                result['unpaid_overtime'] += ot.amount
+                result['unpaid_hours'] += ot.hours
+        
+        return result
+        
+    except Exception as e:
+        print(f"Errore in calculate_month_totals: {e}")
+        # Return default values
+        return {
+            'days_worked': 0,
+            'total_hours': 0,
+            'paid_overtime': 0,
+            'paid_hours': 0,
+            'unpaid_overtime': 0,
+            'unpaid_hours': 0,
+            'allowances': 0,
+            'missions': 0,
+            'total': 0
+        }
