@@ -1,4 +1,10 @@
-"""
+#!/usr/bin/env python3
+import os
+
+print("🔧 Fix travel_sheet_handler.py vuoto")
+
+# Contenuto del handler
+handler_content = '''"""
 Travel sheet management handler
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -41,43 +47,43 @@ async def travel_sheets_command(update: Update, context: ContextTypes.DEFAULT_TY
             if days_waiting > 90:
                 old_sheets.append((sheet, days_waiting))
         
-        text = "📋 <b>GESTIONE FOGLI VIAGGIO</b>\n"
-        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        text = "📋 <b>GESTIONE FOGLI VIAGGIO</b>\\n"
+        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n"
         
         # Summary
-        text += "📊 <b>RIEPILOGO:</b>\n"
-        text += f"├ FV totali: {len(sheets)}\n"
-        text += f"├ Da pagare: {len(unpaid_sheets)} ({format_currency(unpaid_total)})\n"
-        text += f"└ Già pagati: {len(paid_sheets)} ({format_currency(paid_total)})\n\n"
+        text += "📊 <b>RIEPILOGO:</b>\\n"
+        text += f"├ FV totali: {len(sheets)}\\n"
+        text += f"├ Da pagare: {len(unpaid_sheets)} ({format_currency(unpaid_total)})\\n"
+        text += f"└ Già pagati: {len(paid_sheets)} ({format_currency(paid_total)})\\n\\n"
         
         # Alerts
         if old_sheets:
-            text += "⚠️ <b>ALERT PAGAMENTI:</b>\n"
+            text += "⚠️ <b>ALERT PAGAMENTI:</b>\\n"
             for sheet, days in old_sheets[:3]:
-                text += f"├ F.V. {sheet.sheet_number}: {days} giorni!\n"
+                text += f"├ F.V. {sheet.sheet_number}: {days} giorni!\\n"
             if len(old_sheets) > 3:
-                text += f"└ ...e altri {len(old_sheets) - 3} FV\n"
-            text += "\n"
+                text += f"└ ...e altri {len(old_sheets) - 3} FV\\n"
+            text += "\\n"
         
         # Recent unpaid
         if unpaid_sheets:
-            text += "📌 <b>ULTIMI FV DA PAGARE:</b>\n"
+            text += "📌 <b>ULTIMI FV DA PAGARE:</b>\\n"
             for sheet in unpaid_sheets[:5]:
                 days_waiting = (current_date - sheet.date).days
-                text += f"├ {format_date(sheet.date)} - FV {sheet.sheet_number}\n"
-                text += f"│ └ {sheet.destination} - {format_currency(sheet.amount)} ({days_waiting}gg)\n"
+                text += f"├ {format_date(sheet.date)} - FV {sheet.sheet_number}\\n"
+                text += f"│ └ {sheet.destination} - {format_currency(sheet.amount)} ({days_waiting}gg)\\n"
             
             if len(unpaid_sheets) > 5:
-                text += f"└ ...e altri {len(unpaid_sheets) - 5} fogli\n"
+                text += f"└ ...e altri {len(unpaid_sheets) - 5} fogli\\n"
         else:
-            text += "✅ Tutti i fogli viaggio sono stati pagati!\n"
+            text += "✅ Tutti i fogli viaggio sono stati pagati!\\n"
         
         # Statistics
         if sheets:
             avg_payment_time = sum((s.paid_date - s.date).days for s in paid_sheets if s.paid_date) / len(paid_sheets) if paid_sheets else 0
-            text += f"\n📈 <b>STATISTICHE:</b>\n"
-            text += f"├ Tempo medio pagamento: {avg_payment_time:.0f} giorni\n"
-            text += f"└ Importo medio FV: {format_currency(sum(s.amount for s in sheets) / len(sheets))}\n"
+            text += f"\\n📈 <b>STATISTICHE:</b>\\n"
+            text += f"├ Tempo medio pagamento: {avg_payment_time:.0f} giorni\\n"
+            text += f"└ Importo medio FV: {format_currency(sum(s.amount for s in sheets) / len(sheets))}\\n"
         
         keyboard = [
             [
@@ -152,17 +158,17 @@ async def ask_payment_details(update: Update, context: ContextTypes.DEFAULT_TYPE
                 await update.message.reply_text(text, parse_mode='HTML')
             return
         
-        text = "💰 <b>REGISTRAZIONE PAGAMENTO FV</b>\n\n"
-        text += "Seleziona i fogli viaggio pagati:\n\n"
+        text = "💰 <b>REGISTRAZIONE PAGAMENTO FV</b>\\n\\n"
+        text += "Seleziona i fogli viaggio pagati:\\n\\n"
         
         # List sheets
         context.user_data['unpaid_sheets'] = {}
         for i, sheet in enumerate(unpaid_sheets):
-            text += f"{i+1}. FV {sheet.sheet_number} del {format_date(sheet.date)}\n"
-            text += f"   {sheet.destination} - {format_currency(sheet.amount)}\n\n"
+            text += f"{i+1}. FV {sheet.sheet_number} del {format_date(sheet.date)}\\n"
+            text += f"   {sheet.destination} - {format_currency(sheet.amount)}\\n\\n"
             context.user_data['unpaid_sheets'][str(i+1)] = sheet.id
         
-        text += "Inserisci i numeri separati da virgola (es: 1,3,5)\n"
+        text += "Inserisci i numeri separati da virgola (es: 1,3,5)\\n"
         text += "oppure 'tutti' per selezionare tutti:"
         
         if update.callback_query:
@@ -190,8 +196,8 @@ async def show_annual_report(update: Update, context: ContextTypes.DEFAULT_TYPE)
             extract('year', TravelSheet.date) == current_year
         ).all()
         
-        text = f"📊 <b>REPORT FOGLI VIAGGIO {current_year}</b>\n"
-        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        text = f"📊 <b>REPORT FOGLI VIAGGIO {current_year}</b>\\n"
+        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n"
         
         # Monthly breakdown
         monthly_data = {}
@@ -218,17 +224,17 @@ async def show_annual_report(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 total_paid += data['paid']
                 
                 text += f"<b>{months[month-1]}:</b> {data['count']} FV - "
-                text += f"{format_currency(data['amount'])}\n"
+                text += f"{format_currency(data['amount'])}\\n"
                 
                 if data['paid'] < data['amount']:
                     pending = data['amount'] - data['paid']
-                    text += f"└ ⏳ Da ricevere: {format_currency(pending)}\n"
+                    text += f"└ ⏳ Da ricevere: {format_currency(pending)}\\n"
         
-        text += f"\n<b>TOTALE ANNO:</b>\n"
-        text += f"├ FV emessi: {len(yearly_sheets)}\n"
-        text += f"├ Importo totale: {format_currency(total_amount)}\n"
-        text += f"├ Già pagato: {format_currency(total_paid)}\n"
-        text += f"└ Da ricevere: {format_currency(total_amount - total_paid)}\n"
+        text += f"\\n<b>TOTALE ANNO:</b>\\n"
+        text += f"├ FV emessi: {len(yearly_sheets)}\\n"
+        text += f"├ Importo totale: {format_currency(total_amount)}\\n"
+        text += f"├ Già pagato: {format_currency(total_paid)}\\n"
+        text += f"└ Da ricevere: {format_currency(total_amount - total_paid)}\\n"
         
         await update.callback_query.edit_message_text(
             text,
@@ -247,7 +253,7 @@ async def search_travel_sheet(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Search for specific travel sheet"""
     await update.callback_query.answer()
     
-    text = "🔍 <b>RICERCA FOGLIO VIAGGIO</b>\n\n"
+    text = "🔍 <b>RICERCA FOGLIO VIAGGIO</b>\\n\\n"
     text += "Inserisci il numero del foglio viaggio:"
     
     await update.callback_query.edit_message_text(text, parse_mode='HTML')
@@ -257,3 +263,13 @@ async def search_travel_sheet(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def export_travel_sheets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Export travel sheets to Excel"""
     await update.callback_query.answer("Funzione in sviluppo", show_alert=True)
+'''
+
+# Scrivi il file
+with open("handlers/travel_sheet_handler.py", "w") as f:
+    f.write(handler_content)
+
+print("✅ File handlers/travel_sheet_handler.py creato!")
+print("\nProssimi passi:")
+print("1. python3 git_update.py")
+print("2. Scegli 'feat' e inserisci 'aggiunto travel sheet handler mancante'")
