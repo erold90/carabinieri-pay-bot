@@ -125,3 +125,8 @@ print("\n📱 Poi testa il bot con:")
 print("   /start - Menu principale")
 print("   /nuovo - Nuovo servizio")
 print("   /impostazioni - Configurazione")
+
+# Auto-elimina questo script
+print("\n🗑️ Pulizia script temporaneo...")
+os.remove(__file__)
+print("✅ Script eliminato")
