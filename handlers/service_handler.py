@@ -1,6 +1,7 @@
 """
 Service registration handler
 """
+import re
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from datetime import datetime, timedelta, time
@@ -764,6 +765,107 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 # Create conversation handler
+async def handle_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+   """Handle manual time input from user"""
+   text = update.message.text.strip()
+   
+   # Parse time in various formats: HH:MM, HH.MM, HHMM, H:MM
+   time_patterns = [
+       r'^(\d{1,2}):(\d{2})$',     # HH:MM or H:MM
+       r'^(\d{1,2})\.(\d{2})$',     # HH.MM or H.MM
+       r'^(\d{2})(\d{2})$',         # HHMM
+       r'^(\d{1,2})$'               # Just hour
+   ]
+   
+   hour = None
+   minute = 0
+   
+   for pattern in time_patterns:
+       match = re.match(pattern, text)
+       if match:
+           if len(match.groups()) == 2:
+               hour = int(match.group(1))
+               minute = int(match.group(2))
+           else:
+               hour = int(match.group(1))
+               minute = 0
+           break
+   
+   if hour is not None and 0 <= hour <= 23 and 0 <= minute <= 59:
+       # Valid time
+       if context.user_data.get('waiting_for_start_time'):
+           service_date = context.user_data['service_date']
+           start_time = datetime.combine(service_date, time(hour, minute))
+           context.user_data['start_time'] = start_time
+           context.user_data['waiting_for_start_time'] = False
+           
+           text = f"⏰ Inizio: <b>{hour:02d}:{minute:02d}</b>\n\n"
+           text += "Inserisci l'orario di fine (formato HH:MM):\n"
+           text += "Esempi: 14:30, 22:00, 2:30"
+           
+           await update.message.reply_text(text, parse_mode='HTML')
+           context.user_data['waiting_for_end_time'] = True
+           return SELECT_TIME
+           
+       elif context.user_data.get('waiting_for_end_time'):
+           start_time = context.user_data['start_time']
+           service_date = context.user_data['service_date']
+           
+           # Calculate end time (might be next day)
+           if hour < start_time.hour or (hour == start_time.hour and minute <= start_time.minute):
+               # Next day
+               end_date = service_date + timedelta(days=1)
+           else:
+               end_date = service_date
+           
+           end_time = datetime.combine(end_date, time(hour, minute))
+           context.user_data['end_time'] = end_time
+           context.user_data['waiting_for_end_time'] = False
+           
+           # Calculate total hours
+           total_hours = (end_time - start_time).total_seconds() / 3600
+           context.user_data['total_hours'] = total_hours
+           
+           # Check for double shift
+           is_double = total_hours > 12
+           context.user_data['is_double_shift'] = is_double
+           
+           text = f"⏰ <b>ORARIO COMPLETO</b>\n\n"
+           text += f"Dalle: {start_time.strftime('%H:%M')} "
+           text += f"Alle: {end_time.strftime('%H:%M')}\n\n"
+           text += f"✅ Totale: <b>{total_hours:.0f} ore</b>\n"
+           
+           if is_double:
+               text += "\n⚠️ <b>DOPPIA TURNAZIONE RILEVATA!</b>\n\n"
+               text += f"Servizio di {total_hours:.0f} ore = 2 turni esterni\n\n"
+               text += "✅ Applicati automaticamente:\n"
+               text += "├ 1° turno esterno: €5,45\n"
+               text += "├ 2° turno esterno: €5,45\n"
+               text += "└ Totale: €10,90\n"
+           
+           # Check if escort was pre-selected
+           if context.user_data.get('preselected_escort'):
+               context.user_data['service_type'] = ServiceType.ESCORT
+               return await ask_escort_details(update, context)
+           
+           text += "\n\nTipo di servizio?"
+           
+           await update.message.reply_text(
+               text,
+               parse_mode='HTML',
+               reply_markup=get_service_type_keyboard()
+           )
+           
+           return SELECT_SERVICE_TYPE
+           
+   else:
+       await update.message.reply_text(
+           "❌ Orario non valido! Usa il formato HH:MM\n"
+           "Esempi validi: 08:30, 14:45, 22:00, 8:30",
+           parse_mode='HTML'
+       )
+       return SELECT_TIME
+
 service_conversation_handler = ConversationHandler(
     entry_points=[
         CommandHandler("nuovo", new_service_command),
