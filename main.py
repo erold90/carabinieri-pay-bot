@@ -56,7 +56,8 @@ from handlers.settings_handler import (
     settings_command,
     settings_callback,
     update_rank,
-    update_irpef
+    update_irpef,
+    handle_text_input
 )
 from handlers.setup_handler import setup_conversation_handler
 
@@ -148,6 +149,13 @@ def main():
     application.add_handler(CommandHandler("export", export_command))
     application.add_handler(CommandHandler("impostazioni", settings_command))
     
+    
+    # Text input handler for settings
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, 
+        handle_text_input
+    ))
+    
     # Conversation handlers
     application.add_handler(service_conversation_handler)
     application.add_handler(setup_conversation_handler)
@@ -179,9 +187,9 @@ def main():
     
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^meal_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^setup_"))
-    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^([^_"))
+    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
-    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^([^$"))
+    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
 
     # Debug handler for unhandled callbacks
     async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

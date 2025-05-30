@@ -13,7 +13,7 @@ from config.settings import (
     SELECT_DATE, SELECT_TIME, SELECT_SERVICE_TYPE, SERVICE_DETAILS,
     TRAVEL_DETAILS, TRAVEL_TYPE, MEAL_DETAILS, CONFIRM_SERVICE
 )
-from config.constants import SUPER_HOLIDAYS, OVERTIME_RATES
+from config.constants import SUPER_HOLIDAYS, OVERTIME_RATES, MEAL_RATES
 from utils.keyboards import (
     get_date_keyboard, get_time_keyboard, get_service_type_keyboard,
     get_yes_no_keyboard, get_mission_type_keyboard, get_meal_keyboard,
