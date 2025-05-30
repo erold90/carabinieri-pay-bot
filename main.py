@@ -47,7 +47,7 @@ from handlers.report_handler import (
     year_command,
     export_command
 )
-from handlers.settings_handler_complete import (
+from handlers.settings_handler import (
     settings_command,
     settings_callback,
     update_rank,
@@ -112,8 +112,6 @@ def main():
     application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
 
     # Back navigation handlers
-    application.add_handler(CallbackQueryHandler(handle_back_callbacks, pattern="^back_to_"))
-    application.add_handler(CallbackQueryHandler(handle_setup_callbacks, pattern="^setup_"))
     
     
     # Error handler
@@ -127,7 +125,6 @@ def main():
     logger.info("Starting CarabinieriPayBot...")
     
     # Handler for text input in settings
-    async def handle_settings_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle text input for settings"""
         if context.user_data.get('waiting_for_command'):
             # User is entering command name
@@ -176,7 +173,6 @@ def main():
     # Add the text handler
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,
-        handle_settings_text_input
     ))
 
     application.run_polling()
