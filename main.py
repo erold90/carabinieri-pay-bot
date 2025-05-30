@@ -17,7 +17,7 @@ from handlers.settings_handler import settings_callback
 from handlers.leave_handler import leave_callback
 from handlers.travel_sheet_handler import travel_sheet_callback
 from handlers.overtime_handler import overtime_callback
-from handlers.report_handler import month_command
+from handlers.report_handler import month_command, week_command, year_command
 from handlers.service_handler import handle_service_type, handle_status_selection, handle_meals, handle_meal_selection, handle_mission_type
 from handlers.service_handler import (
     new_service_command, 
