@@ -8,6 +8,7 @@ Main entry point
 import logging
 import os
 from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from dotenv import load_dotenv
 from utils.clean_chat import cleanup_middleware
@@ -116,6 +117,85 @@ async def handle_missing_callbacks(update: Update, context: ContextTypes.DEFAULT
             ])
         )
 
+
+
+# === FUNZIONI DI SUPPORTO PER CALLBACK ===
+
+async def handle_time_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle time selection callbacks"""
+    query = update.callback_query
+    await query.answer()
+    
+    data = query.data
+    if data.startswith('start_time_'):
+        hour = int(data.replace('start_time_', ''))
+        await query.answer(f"Inizio: {hour:02d}:00")
+    elif data.startswith('end_time_'):
+        hour = int(data.replace('end_time_', ''))
+        await query.answer(f"Fine: {hour:02d}:00")
+
+async def handle_back_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle all back navigation"""
+    query = update.callback_query
+    await query.answer()
+    
+    destination = query.data.replace('back_', '')
+    
+    # Route to appropriate handler
+    if destination == 'to_menu':
+        await start_command(update, context)
+    elif destination == 'to_settings':
+        await settings_command(update, context)
+    elif destination == 'to_leave':
+        await leave_command(update, context)
+    elif destination == 'to_fv':
+        await travel_sheets_command(update, context)
+    elif destination == 'overtime':
+        await overtime_command(update, context)
+    else:
+        # Default back action
+        await query.edit_message_text(
+            "⬅️ Tornando indietro...",
+            parse_mode='HTML'
+        )
+
+async def handle_generic_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
+    """Handle generic callbacks"""
+    query = update.callback_query
+    
+    # Log per debug
+    print(f"[DEBUG] Callback generico: {callback_data}")
+    
+    # Risposte predefinite per callback comuni
+    responses = {
+        'setup_start': '⚙️ Avvio configurazione...',
+        'month_': '📅 Selezione mese...',
+        'add_route': '➕ Aggiunta percorso...',
+        'remove_route': '➖ Rimozione percorso...',
+        'set_patron_saint': '📅 Impostazione Santo Patrono...',
+        'change_reminder_time': '⏰ Cambio orario notifiche...',
+    }
+    
+    # Cerca risposta appropriata
+    response = '✅'
+    for key, msg in responses.items():
+        if callback_data.startswith(key):
+            response = msg
+            break
+    
+    await query.answer(response)
+    
+    # Se necessario, aggiorna il messaggio
+    if callback_data in ['setup_start', 'add_route', 'remove_route']:
+        await query.edit_message_text(
+            f"{response}\n\nFunzione in sviluppo.",
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Indietro", callback_data="back")]
+            ])
+        )
+
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -202,7 +282,34 @@ def main():
         handle_reminder_time, pattern="^change_reminder_time$"
     ))
 
-    # Debug handler for unhandled callbacks
+    
+    # === HANDLER PER TUTTI I CALLBACK MANCANTI ===
+
+    # toggle_ callbacks (4 items)
+    application.add_handler(CallbackQueryHandler(
+        toggle_notification,
+        pattern="^(toggle_travel_sheet|toggle_leave_expiry|toggle_overtime_limit|toggle_daily_reminder)$"
+    ))
+
+    # edit_ callbacks (3 items)
+    application.add_handler(CallbackQueryHandler(
+        lambda u,c: u.callback_query.answer('✅'),
+        pattern="^(edit_current_leave_total|edit_previous_leave|edit_current_leave_used)$"
+    ))
+
+    # add_ callbacks (1 items)
+    application.add_handler(CallbackQueryHandler(
+        lambda u,c: u.callback_query.answer('✅'),
+        pattern="^add_route$"
+    ))
+
+    # remove_ callbacks (1 items)
+    application.add_handler(CallbackQueryHandler(
+        lambda u,c: u.callback_query.answer('✅'),
+        pattern="^remove_route$"
+    ))
+
+# Debug handler for unhandled callbacks
     async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()

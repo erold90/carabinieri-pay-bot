@@ -1,0 +1,42 @@
+DIAGNOSTIC REPORT - CARABINIERI PAY BOT
+==================================================
+
+Data: Ven 30 Mag 2025 23:57:31 CEST
+
+PROBLEMI CRITICI:
+- ❌ 62 callback non gestiti: service_type_LOCAL, settings_personal, irpef_23, toggle_leave_expiry, meals_2...
+- 🚨 SICUREZZA: eval() trovato in ./full_bot_diagnostic.py
+- 🚨 SICUREZZA: exec() trovato in ./full_bot_diagnostic.py
+
+AVVISI:
+- 📝 ./handlers/overtime_handler.py ha 1 TODO
+- 📝 ./handlers/service_handler.py ha 2 TODO
+- 📝 ./handlers/report_handler.py ha 1 TODO
+- 📝 ./handlers/leave_handler.py ha 5 TODO
+- ⚠️ Possibile SQL injection in ./full_bot_diagnostic.py
+- ⚠️ Possibile SQL injection in ./handlers/service_handler.py
+
+FILE ANALIZZATI:
+- ./config/__init__.py
+- ./config/constants.py
+- ./config/settings.py
+- ./database/__init__.py
+- ./database/connection.py
+- ./database/models.py
+- ./full_bot_diagnostic.py
+- ./handlers/__init__.py
+- ./handlers/leave_handler.py
+- ./handlers/overtime_handler.py
+- ./handlers/report_handler.py
+- ./handlers/service_handler.py
+- ./handlers/settings_handler.py
+- ./handlers/setup_handler.py
+- ./handlers/start_handler.py
+- ./handlers/travel_sheet_handler.py
+- ./main.py
+- ./services/__init__.py
+- ./services/calculation_service.py
+- ./utils/__init__.py
+- ./utils/clean_chat.py
+- ./utils/formatters.py
+- ./utils/keyboards.py
