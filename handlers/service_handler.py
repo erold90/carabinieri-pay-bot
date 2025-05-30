@@ -20,6 +20,8 @@ from utils.keyboards import (
 )
 from utils.formatters import format_currency, format_date, format_time_range, format_hours
 from services.calculation_service import (
+from handlers.start_handler import start_command
+
     is_holiday, is_super_holiday, calculate_service_total
 )
 
