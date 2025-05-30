@@ -130,7 +130,7 @@ def main():
     application.add_handler(MessageHandler(filters.ALL, cleanup_middleware), group=-999)
 
     # Handler per auto-cancellazione comandi (massima priorità)
-    application.add_handler(MessageHandler(
+    application.add_handler(MessageHandler(filters.ALL, lambda u,c: None))
         filters.COMMAND, 
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
