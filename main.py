@@ -8,7 +8,7 @@ Main entry point
 import logging
 import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from dotenv import load_dotenv
 
 # Import handlers
