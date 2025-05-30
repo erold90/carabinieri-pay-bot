@@ -16,6 +16,11 @@ from database.connection import init_db, SessionLocal
 from database.models import User
 
 # Import handlers
+
+# Import clean chat system
+from utils.clean_chat import chat_cleaner
+from utils.handler_decorators import clean_chat_command, clean_chat_callback
+
 from handlers.start_handler import start_command, dashboard_callback
 from handlers.service_handler import (
     new_service_command, 
@@ -76,7 +81,7 @@ def main():
     application = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))).build()
 
     # Command handlers
-    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("start", clean_chat_command(start_command)))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))
@@ -92,7 +97,7 @@ def main():
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("mese", month_command))
     application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("export", export_command))
+    application.add_handler(CommandHandler("export", clean_chat_command(export_command)))
     application.add_handler(CommandHandler("impostazioni", settings_command))
     
     # Conversation handlers

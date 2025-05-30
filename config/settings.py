@@ -42,3 +42,7 @@ def get_current_datetime():
     LEAVE_DATES,
     LEAVE_TYPE
 ) = range(12)
+
+# Impostazione per clean chat
+CLEAN_CHAT_ENABLED = True  # Abilita/disabilita la pulizia automatica della chat
+KEEP_ONLY_LAST_MESSAGE = True  # Mantiene solo l'ultimo messaggio
