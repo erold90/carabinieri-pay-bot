@@ -86,6 +86,76 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# Handler per callback non implementati
+async def handle_missing_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler generico per callback non implementati"""
+    query = update.callback_query
+    await query.answer()
+    
+    callback_data = query.data
+    logger.warning(f"Callback non implementato: {callback_data}")
+    
+    # Risposte specifiche per tipo di callback
+    responses = {
+        "meal_lunch": "🍽️ Selezione pasto...",
+        "meal_dinner": "🍽️ Selezione pasto...",
+        "meal_confirm": "✅ Conferma selezione pasti",
+        "back": "⬅️ Torna indietro",
+        "setup_start": "⚙️ Avvio configurazione..."
+    }
+    
+    response_text = responses.get(callback_data, "⚠️ Funzione in sviluppo")
+    
+    try:
+        await query.answer(response_text)
+    except:
+        await query.answer("✅")
+
+# Handler per navigazione indietro
+async def handle_back_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle back navigation"""
+    query = update.callback_query
+    await query.answer()
+    
+    destination = query.data.replace('back_', '')
+    
+    # Route to appropriate handler
+    if destination == 'to_menu':
+        await start_command(update, context)
+    elif destination == 'to_settings':
+        from handlers.settings_handler import settings_command
+        await settings_command(update, context)
+    elif destination == 'to_leave':
+        from handlers.leave_handler import leave_command
+        await leave_command(update, context)
+    elif destination == 'to_fv':
+        from handlers.travel_sheet_handler import travel_sheets_command
+        await travel_sheets_command(update, context)
+    elif destination == 'overtime':
+        from handlers.overtime_handler import overtime_command
+        await overtime_command(update, context)
+    elif destination == 'to_rest':
+        from handlers.rest_handler import rest_command
+        await rest_command(update, context)
+    else:
+        # Default
+        await query.edit_message_text(
+            "⬅️ Tornando al menu principale...",
+            parse_mode='HTML'
+        )
+        await start_command(update, context)
+
+# Handler debug per callback non gestiti
+async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Debug handler for unhandled callbacks"""
+    query = update.callback_query
+    await query.answer()
+    logger.warning(f"Callback non gestito: {query.data}")
+    await query.answer(f"Debug: {query.data}")
+
+
+
 def main():
     """Start the bot."""
     # Initialize database
