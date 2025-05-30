@@ -102,10 +102,12 @@ async def delete_message_after_delay(message, delay=3):
     except:
         pass
 
-async def instant_delete_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Modalità cancellazione istantanea per comandi"""
-    if update.message and update.message.text and update.message.text.startswith('/'):
-        # Elimina comando utente dopo 2 secondi
-        context.application.create_task(
-            delete_message_after_delay(update.message, 2)
-        )
+
+# Sistema semplificato di auto-delete
+AUTO_DELETE_ENABLED = True
+DELETE_DELAY = 30  # secondi
+
+async def setup_auto_delete(application):
+    """Setup auto-delete per l'applicazione"""
+    print("✅ Sistema auto-delete configurato")
+

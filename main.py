@@ -16,7 +16,7 @@ from utils.clean_chat import cleanup_middleware
 from database.connection import init_db
 
 # Import tutti gli handler necessari
-from handlers.start_handler import start_command, dashboard_callback, clean_command
+from handlers.start_handler import start_command, dashboard_callback
 from handlers.service_handler import (
     new_service_command, 
     service_conversation_handler,
@@ -132,12 +132,7 @@ def main():
     # Handler per auto-cancellazione comandi (massima priorità)
     application.add_handler(MessageHandler(
         filters.COMMAND, 
-        instant_delete_mode
-    ), group=-1000)
-
-    # Command handlers
     application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("clean", clean_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))

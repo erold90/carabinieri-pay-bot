@@ -250,26 +250,3 @@ async def dashboard_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     elif action == "settings":
         from handlers.settings_handler import settings_command
         await settings_command(update, context)
-
-
-async def clean_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Toggle auto-cancellazione messaggi"""
-    from config.settings import CLEAN_CHAT_ENABLED
-    import config.settings as settings
-    
-    # Toggle stato
-    settings.CLEAN_CHAT_ENABLED = not settings.CLEAN_CHAT_ENABLED
-    
-    status = "ATTIVATA 🟢" if settings.CLEAN_CHAT_ENABLED else "DISATTIVATA 🔴"
-    
-    response = await update.message.reply_text(
-        f"🧹 <b>Auto-cancellazione messaggi: {status}</b>\n\n"
-        f"{'I messaggi verranno eliminati automaticamente dopo pochi secondi.' if settings.CLEAN_CHAT_ENABLED else 'I messaggi rimarranno nella chat.'}\n\n"
-        "Usa /clean per cambiare questa impostazione.",
-        parse_mode='HTML'
-    )
-    
-    # Se attiva, elimina anche questo messaggio
-    if settings.CLEAN_CHAT_ENABLED:
-        await delete_message_after_delay(update.message, 5)
-        await delete_message_after_delay(response, 5)
