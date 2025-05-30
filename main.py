@@ -16,7 +16,7 @@ from handlers.start_handler import start_command, dashboard_callback
 from handlers.service_handler import (
     new_service_command, 
     service_conversation_handler
-))
+)
 from handlers.overtime_handler import (
     overtime_command,
     overtime_callback,
@@ -42,20 +42,15 @@ from handlers.report_handler import (
     year_command,
     export_command
 )
-from handlers.settings_handler import (,
+from handlers.settings_handler import (
+    settings_command,
+    settings_callback,
     update_rank,
     update_irpef
-)
-    settings_command,
-    settings_callback
 )
 
 # Import database
 from database.connection import init_db
-
-# Import clean chat system
-# from utils.clean_chat import chat_cleaner
-# from utils.handler_decorators import clean_chat_command, clean_chat_callback
 
 # Load environment variables
 load_dotenv()
@@ -75,25 +70,25 @@ def main():
     # Create the Application
     application = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))).build()
 
-    # Command handlers con clean chat
-    application.add_handler(CommandHandler("start", start_command)))
-    application.add_handler(CommandHandler("nuovo", new_service_command)))
-    application.add_handler(CommandHandler("scorta", new_service_command)))
-    application.add_handler(CommandHandler("straordinari", overtime_command)))
-    application.add_handler(CommandHandler("ore_pagate", paid_hours_command)))
-    application.add_handler(CommandHandler("accumulo", accumulation_command)))
-    application.add_handler(CommandHandler("fv", travel_sheets_command)))
-    application.add_handler(CommandHandler("fv_pagamento", register_payment_command)))
-    application.add_handler(CommandHandler("licenze", leave_command)))
-    application.add_handler(CommandHandler("inserisci_licenza", add_leave_command)))
-    application.add_handler(CommandHandler("pianifica", plan_leave_command)))
-    application.add_handler(CommandHandler("oggi", today_command)))
-    application.add_handler(CommandHandler("ieri", yesterday_command)))
-    application.add_handler(CommandHandler("settimana", week_command)))
-    application.add_handler(CommandHandler("mese", month_command)))
-    application.add_handler(CommandHandler("anno", year_command)))
-    application.add_handler(CommandHandler("export", export_command)))
-    application.add_handler(CommandHandler("impostazioni", settings_command)))
+    # Command handlers
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("nuovo", new_service_command))
+    application.add_handler(CommandHandler("scorta", new_service_command))
+    application.add_handler(CommandHandler("straordinari", overtime_command))
+    application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
+    application.add_handler(CommandHandler("accumulo", accumulation_command))
+    application.add_handler(CommandHandler("fv", travel_sheets_command))
+    application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
+    application.add_handler(CommandHandler("licenze", leave_command))
+    application.add_handler(CommandHandler("inserisci_licenza", add_leave_command))
+    application.add_handler(CommandHandler("pianifica", plan_leave_command))
+    application.add_handler(CommandHandler("oggi", today_command))
+    application.add_handler(CommandHandler("ieri", yesterday_command))
+    application.add_handler(CommandHandler("settimana", week_command))
+    application.add_handler(CommandHandler("mese", month_command))
+    application.add_handler(CommandHandler("anno", year_command))
+    application.add_handler(CommandHandler("export", export_command))
+    application.add_handler(CommandHandler("impostazioni", settings_command))
     
     # Conversation handlers
     application.add_handler(service_conversation_handler)
@@ -105,16 +100,17 @@ def main():
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
     
+    # Rank and IRPEF selection handlers
+    application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
+    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
+    
     # Back navigation callbacks
     application.add_handler(CallbackQueryHandler(start_command, pattern="^back_to_menu$"))
     application.add_handler(CallbackQueryHandler(settings_command, pattern="^back_to_settings$"))
     application.add_handler(CallbackQueryHandler(leave_command, pattern="^back_to_leave$"))
     application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^back_to_fv$"))
     application.add_handler(CallbackQueryHandler(overtime_command, pattern="^back_overtime$"))
-    # Rank and IRPEF selection handlers
-    application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
-    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
-        
+    
     # Error handler
     async def error_handler(update: Update, context):
         """Log Errors caused by Updates."""
