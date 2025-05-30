@@ -306,7 +306,7 @@ def main():
         )
     
     # Add at the end to catch unhandled callbacks
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer()debug_unhandled_callback))
+    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), debug_unhandled_callback))
     
     # Error handler
     async def error_handler(update: Update, context):
