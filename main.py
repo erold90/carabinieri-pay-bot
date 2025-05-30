@@ -9,8 +9,8 @@ import logging
 import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
-from utils.clean_chat import message_cleaner, cleanup_middleware
 from dotenv import load_dotenv
+from utils.clean_chat import cleanup_middleware
 
 # Import database
 from database.connection import init_db
@@ -23,7 +23,7 @@ from handlers.service_handler import (
     handle_service_type,
     handle_status_selection,
     handle_meals,
-        handle_mission_type,
+    handle_mission_type,
     handle_time_input
 )
 from handlers.overtime_handler import (
@@ -51,7 +51,6 @@ from handlers.report_handler import (
     year_command,
     export_command
 )
-from handlers.setup_handler import setup_conversation_handler
 from handlers.settings_handler import (
     settings_command,
     settings_callback,
@@ -76,6 +75,10 @@ def main():
     
     # Create the Application
     application = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))).build()
+    
+    # Middleware per pulizia automatica messaggi
+    # DEVE essere il PRIMO handler con priority massima
+    application.add_handler(MessageHandler(filters.ALL, cleanup_middleware), group=-999)
 
     # Command handlers
     application.add_handler(CommandHandler("start", start_command))
