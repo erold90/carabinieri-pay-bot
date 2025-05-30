@@ -325,4 +325,9 @@ def calculate_month_totals(db: Session, user_id: int, month: int, year: int):
             Overtime.is_paid == False
         ).all()
         data['unpaid_overtime'] += sum(ot.amount for ot in unpaid_ot)
-        data['unpaid_hours'] += sum(ot.hours for ot in
+        data['unpaid_hours'] += sum(ot.hours for ot in unpaid_ot)
+    
+    # Calculate total (paid amounts only)
+    data['total'] = data['paid_overtime'] + data['allowances'] + data['missions']
+    
+    return data
