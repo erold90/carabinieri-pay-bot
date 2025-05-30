@@ -22,7 +22,6 @@ from utils.clean_chat import cleanup_middleware
 
 # Import database
 from database.connection import init_db
-from services.notification_service import start_notification_system
 
 # Import tutti gli handler necessari
 from handlers.start_handler import start_command, dashboard_callback
@@ -33,9 +32,9 @@ from handlers.service_handler import (
     handle_status_selection,
     handle_meals,
     handle_mission_type,
-    handle_time_input
-,
-    handle_meal_selection)
+    handle_time_input,
+    handle_meal_selection
+)
 from handlers.overtime_handler import (
     overtime_command,
     overtime_callback,
@@ -54,8 +53,7 @@ from handlers.leave_handler import (
     plan_leave_command
 )
 from handlers.rest_handler import rest_command, rest_callback
-from handlers.report_handler import ()
-# from handlers.export_handler import generate_excel_export  # TODO: verificare
+from handlers.report_handler import (
     today_command,
     yesterday_command,
     week_command,
@@ -69,17 +67,11 @@ from handlers.settings_handler import (
     update_rank,
     update_irpef,
     handle_text_input,
-    settings_command,
-    settings_callback,
-    update_rank,
-    update_irpef,
-    handle_text_input,
-    settings_command,
     handle_leave_edit,
-    handle_reminder_time,
-    toggle_notification,
     handle_route_action,
     handle_patron_saint,
+    handle_reminder_time,
+    toggle_notification
 )
 from handlers.setup_handler import setup_conversation_handler
 
@@ -92,181 +84,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-# Handler per callback mancanti
-async def handle_missing_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handler generico per callback non implementati"""
-    query = update.callback_query
-    await query.answer()
-    
-    callback_data = query.data
-    
-    # Log per debug
-    logger.warning(f"Callback non implementato: {callback_data}")
-    
-    # Risposte specifiche per tipo di callback
-    responses = {
-        "meal_lunch": "🍽️ Gestione pasti in aggiornamento...",
-        "meal_confirm": "🍽️ Gestione pasti in aggiornamento...",
-        "meal_dinner": "🍽️ Gestione pasti in aggiornamento...",
-        "back": "🔧 Funzione back in sviluppo...",
-        "setup_start": "🔧 Funzione setup in sviluppo...",
-        "([^": "🔧 Funzione ([^ in sviluppo...",
-        # Default
-        "default": "⚠️ Funzione non ancora disponibile.\n\nTorna al menu principale con /start"
-    }
-    
-    # Ottieni la risposta appropriata
-    response_text = responses.get(callback_data, responses["default"])
-    
-    # Invia la risposta
-    try:
-        await query.edit_message_text(
-            response_text,
-            parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏠 Menu Principale", callback_data="back_to_menu")]
-            ])
-        )
-    except:
-        # Se edit fallisce, prova con un nuovo messaggio
-        await query.message.reply_text(
-            response_text,
-            parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏠 Menu Principale", callback_data="back_to_menu")]
-            ])
-        )
-
-# === FUNZIONI DI SUPPORTO PER CALLBACK ===
-
-async def handle_time_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle time selection callbacks"""
-    query = update.callback_query
-    await query.answer()
-    
-    data = query.data
-    if data.startswith('start_time_'):
-        hour = int(data.replace('start_time_', ''))
-        await query.answer(f"Inizio: {hour:02d}:00")
-    elif data.startswith('end_time_'):
-        hour = int(data.replace('end_time_', ''))
-        await query.answer(f"Fine: {hour:02d}:00")
-
-async def handle_back_navigation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle all back navigation"""
-    query = update.callback_query
-    await query.answer()
-    
-    destination = query.data.replace('back_', '')
-    
-    # Route to appropriate handler
-    if destination == 'to_menu':
-        await start_command(update, context)
-    elif destination == 'to_settings':
-        await settings_command(update, context)
-    elif destination == 'to_leave':
-        await leave_command(update, context)
-    elif destination == 'to_fv':
-        await travel_sheets_command(update, context)
-    elif destination == 'overtime':
-        await overtime_command(update, context)
-    else:
-        # Default back action
-        await query.edit_message_text(
-            "⬅️ Tornando indietro...",
-            parse_mode='HTML'
-        )
-
-async def handle_generic_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
-    """Handle generic callbacks"""
-    query = update.callback_query
-    
-    # Log per debug
-    print(f"[DEBUG] Callback generico: {callback_data}")
-    
-    # Risposte predefinite per callback comuni
-    responses = {
-        'setup_start': '⚙️ Avvio configurazione...',
-        'month_': '📅 Selezione mese...',
-        'add_route': '➕ Aggiunta percorso...',
-        'remove_route': '➖ Rimozione percorso...',
-        'set_patron_saint': '📅 Impostazione Santo Patrono...',
-        'change_reminder_time': '⏰ Cambio orario notifiche...',
-    }
-    
-    # Cerca risposta appropriata
-    response = '✅'
-    for key, msg in responses.items():
-        if callback_data.startswith(key):
-            response = msg
-            break
-    
-    await query.answer(response)
-    
-    # Se necessario, aggiorna il messaggio
-    if callback_data in ['setup_start', 'add_route', 'remove_route']:
-        await query.edit_message_text(
-            f"{response}\n\nFunzione in sviluppo.",
-            parse_mode='HTML',
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬅️ Indietro", callback_data="back")]
-            ])
-        )
-
-    # Handler per input di testo in vari contesti
-    async def handle_general_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle all text inputs based on context"""
-        user_data = context.user_data
-        
-        # Overtime: ore pagate
-        if user_data.get('waiting_for_paid_hours'):
-            from handlers.overtime_handler import handle_paid_hours_input
-            await handle_paid_hours_input(update, context)
-            
-        # Travel sheets: selezione FV da pagare
-        elif user_data.get('waiting_for_fv_selection'):
-            from handlers.travel_sheet_handler import handle_travel_sheet_selection
-            await handle_travel_sheet_selection(update, context)
-            
-        # Travel sheets: ricerca
-        elif user_data.get('waiting_for_fv_search'):
-            from handlers.travel_sheet_handler import handle_travel_sheet_search
-            await handle_travel_sheet_search(update, context)
-            
-        # Settings: vari input
-        elif user_data.get('waiting_for_command') or user_data.get('waiting_for_base_hours'):
-            from handlers.settings_handler import handle_text_input
-            await handle_text_input(update, context)
-            
-        # Leave: modifica valori
-        elif user_data.get('waiting_for_leave_value'):
-            from handlers.leave_handler import handle_leave_value_input
-            await handle_leave_value_input(update, context)
-            
-        # Routes: nome percorso
-        elif user_data.get('adding_route'):
-            from handlers.leave_handler import handle_route_name_input
-            await handle_route_name_input(update, context)
-            
-        # Routes: km percorso
-        elif user_data.get('adding_route_km'):
-            from handlers.leave_handler import handle_route_km_input
-            await handle_route_km_input(update, context)
-            
-        # Patron saint
-        elif user_data.get('setting_patron_saint'):
-            from handlers.leave_handler import handle_patron_saint_input
-            
-        # Reminder time
-        elif user_data.get('setting_reminder_time'):
-            from handlers.leave_handler import handle_reminder_time_input
-    
-    # Aggiungi handler generale per testo PRIMA dei conversation handler
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        handle_general_text_input
-    ), group=1)
 
 def main():
     """Start the bot."""
