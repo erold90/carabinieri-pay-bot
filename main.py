@@ -9,6 +9,7 @@ import logging
 import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
+from utils.clean_chat import message_cleaner, cleanup_middleware
 from dotenv import load_dotenv
 
 # Import database
