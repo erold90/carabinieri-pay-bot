@@ -50,6 +50,7 @@ from handlers.report_handler import (
     year_command,
     export_command
 )
+from handlers.setup_handler import setup_conversation_handler
 from handlers.settings_handler import (
     settings_command,
     settings_callback,

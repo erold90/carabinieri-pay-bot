@@ -30,6 +30,10 @@ def get_current_datetime():
 # Conversation states
 (
     SELECT_DATE,
+    SETUP_RANK,
+    SETUP_COMMAND,
+    SETUP_IRPEF,
+    SETUP_LEAVE,
     SELECT_TIME,
     SELECT_SERVICE_TYPE,
     SERVICE_DETAILS,
@@ -41,7 +45,7 @@ def get_current_datetime():
     SELECT_TRAVEL_SHEETS,
     LEAVE_DATES,
     LEAVE_TYPE
-) = range(12)
+) = range(16)
 
 # Impostazione per clean chat
 CLEAN_CHAT_ENABLED = True  # Abilita/disabilita la pulizia automatica della chat
