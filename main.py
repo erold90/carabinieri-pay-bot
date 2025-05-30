@@ -41,6 +41,7 @@ from handlers.travel_sheet_handler import (
     register_payment_command
 )
 from handlers.leave_handler import (
+from handlers.rest_handler import rest_command, rest_callback
     leave_command,
     leave_callback,
     add_leave_command,
@@ -284,6 +285,7 @@ def main():
     application.add_handler(CommandHandler("fv", travel_sheets_command))
     application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
     application.add_handler(CommandHandler("licenze", leave_command))
+    application.add_handler(CommandHandler("riposi", rest_command))
     application.add_handler(CommandHandler("inserisci_licenza", add_leave_command))
     application.add_handler(CommandHandler("pianifica", plan_leave_command))
     application.add_handler(CommandHandler("oggi", today_command))

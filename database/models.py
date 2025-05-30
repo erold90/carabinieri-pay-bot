@@ -30,6 +30,52 @@ class LeaveType(str, enum.Enum):
     MARRIAGE = "MARRIAGE"
     OTHER = "OTHER"
 
+
+class RestType(str, enum.Enum):
+    WEEKLY = "WEEKLY"  # Riposo settimanale
+    HOLIDAY = "HOLIDAY"  # Festività infrasettimanale
+    COMPENSATORY = "COMPENSATORY"  # Riposo compensativo per straordinari
+
+class Rest(Base):
+    __tablename__ = "rests"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    # Dettagli riposo
+    rest_type = Column(Enum(RestType), nullable=False)
+    scheduled_date = Column(Date, nullable=False)
+    actual_date = Column(Date)  # Se diversa dalla pianificata
+    
+    # Stato
+    is_completed = Column(Boolean, default=False)
+    is_worked = Column(Boolean, default=False)  # Se ha lavorato invece di riposare
+    work_reason = Column(String)  # Motivo del richiamo
+    
+    # Recupero
+    recovery_due_date = Column(Date)  # Entro 4 settimane
+    recovery_date = Column(Date)  # Quando effettivamente recuperato
+    is_recovered = Column(Boolean, default=False)
+    
+    # Riferimenti
+    service_id = Column(Integer, ForeignKey("services.id"))  # Servizio che ha sostituito il riposo
+    
+    # Timestamps
+    created_at = Column(DateTime, default=get_current_datetime)
+    updated_at = Column(DateTime, default=get_current_datetime, onupdate=get_current_datetime)
+    
+    # Relationships
+    user = relationship("User", back_populates="rests")
+    rest_replaced = relationship("Rest", back_populates="service", uselist=False)
+    service = relationship("Service", back_populates="rest_replaced")
+
+# Aggiungi relazione in Service
+# rest_replaced = relationship("Rest", back_populates="service", uselist=False)
+
+# Aggiungi in User
+# rests = relationship("Rest", back_populates="user", cascade="all, delete-orphan")
+
+
 class User(Base):
     __tablename__ = "users"
     
@@ -67,6 +113,7 @@ class User(Base):
     overtimes = relationship("Overtime", back_populates="user", cascade="all, delete-orphan")
     travel_sheets = relationship("TravelSheet", back_populates="user", cascade="all, delete-orphan")
     leaves = relationship("Leave", back_populates="user", cascade="all, delete-orphan")
+    rests = relationship("Rest", back_populates="user", cascade="all, delete-orphan")
 
 class Service(Base):
     __tablename__ = "services"
