@@ -147,7 +147,6 @@ def main():
     application.add_handler(CommandHandler("impostazioni", settings_command))
 
     # Text input handler for settings
-    ))
     
     # Conversation handlers
     application.add_handler(service_conversation_handler)
