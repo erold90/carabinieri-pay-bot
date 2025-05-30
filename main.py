@@ -11,17 +11,20 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from dotenv import load_dotenv
 
-# Import handlers
+# Import database
+from database.connection import init_db
+
+# Import tutti gli handler necessari
 from handlers.start_handler import start_command, dashboard_callback
-from handlers.settings_handler import settings_callback
-from handlers.leave_handler import leave_callback
-from handlers.travel_sheet_handler import travel_sheet_callback
-from handlers.overtime_handler import overtime_callback
-from handlers.report_handler import month_command, week_command, year_command
-from handlers.service_handler import handle_service_type, handle_status_selection, handle_meals, handle_meal_selection, handle_mission_type
 from handlers.service_handler import (
     new_service_command, 
-    service_conversation_handler
+    service_conversation_handler,
+    handle_service_type,
+    handle_status_selection,
+    handle_meals,
+    handle_meal_selection,
+    handle_mission_type,
+    handle_time_input
 )
 from handlers.overtime_handler import (
     overtime_command,
@@ -54,9 +57,6 @@ from handlers.settings_handler import (
     update_rank,
     update_irpef
 )
-
-# Import database
-from database.connection import init_db
 
 # Load environment variables
 load_dotenv()
@@ -106,16 +106,35 @@ def main():
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
     
+    # Specific handlers for service callbacks
+    application.add_handler(CallbackQueryHandler(handle_service_type, pattern="^service_type_"))
+    application.add_handler(CallbackQueryHandler(handle_status_selection, pattern="^status_"))
+    application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meals_"))
+    application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
+    
     # Rank and IRPEF selection handlers
     application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
     application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
     
-    # Back navigation callbacks
+    # Navigation handlers
     application.add_handler(CallbackQueryHandler(start_command, pattern="^back_to_menu$"))
     application.add_handler(CallbackQueryHandler(settings_command, pattern="^back_to_settings$"))
     application.add_handler(CallbackQueryHandler(leave_command, pattern="^back_to_leave$"))
     application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^back_to_fv$"))
     application.add_handler(CallbackQueryHandler(overtime_command, pattern="^back_overtime$"))
+    
+    # Debug handler for unhandled callbacks
+    async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        logger.warning(f"Callback non gestito: {query.data}")
+        await query.edit_message_text(
+            f"⚠️ Funzione in sviluppo: {query.data}\n\nTorna al menu con /start",
+            parse_mode='HTML'
+        )
+    
+    # Add at the end to catch unhandled callbacks
+    application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
     
     # Error handler
     async def error_handler(update: Update, context):
@@ -126,40 +145,6 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
-    
-   # Debug handler per callback non gestiti
-   async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-       query = update.callback_query
-       await query.answer()
-       logger.warning(f"Callback non gestito: {query.data}")
-       await query.edit_message_text(
-           f"⚠️ Funzione in sviluppo: {query.data}
-
-Torna al menu con /start",
-           parse_mode='HTML'
-       )
-   
-   # Aggiungi alla fine per catturare callback non gestiti
-   application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
-
-    
-    # Additional callback handlers for all buttons
-    application.add_handler(CallbackQueryHandler(new_service_command, pattern="^dashboard_new_service$|^dashboard_new_escort$"))
-    application.add_handler(CallbackQueryHandler(month_command, pattern="^dashboard_report$"))
-    application.add_handler(CallbackQueryHandler(overtime_command, pattern="^dashboard_overtime$"))
-    application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^dashboard_travel_sheets$"))
-    application.add_handler(CallbackQueryHandler(leave_command, pattern="^dashboard_leaves$"))
-    application.add_handler(CallbackQueryHandler(settings_command, pattern="^dashboard_settings$"))
-    application.add_handler(CallbackQueryHandler(handle_service_type, pattern="^service_type_LOCAL$|^service_type_ESCORT$|^service_type_MISSION$"))
-    application.add_handler(CallbackQueryHandler(handle_status_selection, pattern="^status_normal$|^status_leave$|^status_rest$|^status_recovery$|^status_other$"))
-    application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meals_0$|^meals_1$|^meals_2$"))
-    application.add_handler(CallbackQueryHandler(handle_meal_selection, pattern="^meal_lunch$|^meal_dinner$"))
-    application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_ordinary$|^mission_type_forfeit$"))
-    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_personal$|^settings_leaves$|^settings_location$|^settings_notifications$|^settings_change_rank$|^settings_change_irpef$|^settings_command$|^settings_base_hours$"))
-    application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_detail$|^overtime_simulate$|^overtime_paid$|^overtime_history$"))
-    application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_register_payment$|^fv_annual_report$|^fv_search$|^fv_export$"))
-    application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_add$|^leave_plan$|^leave_report$|^leave_config$|^leave_type_current$|^leave_type_previous$|^leave_type_sick$|^leave_type_blood$|^leave_type_104$|^leave_type_study$|^leave_type_marriage$|^leave_type_other$|^leave_confirm$"))
-
     application.run_polling()
 
 if __name__ == '__main__':
