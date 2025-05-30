@@ -58,7 +58,7 @@ from handlers.leave_handler import (
 )
 from handlers.rest_handler import rest_command, rest_callback
 from handlers.report_handler import (
-from handlers.export_handler import generate_excel_export
+# ERRORE: from handlers.export_handler import generate_excel_export
     today_command,
     yesterday_command,
     week_command,
