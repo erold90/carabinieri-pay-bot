@@ -17,7 +17,7 @@ class MessageCleaner:
         # Mantieni una coda di messaggi per chat_id
         self.message_history: Dict[int, deque] = {}
         # Numero massimo di messaggi da mantenere
-        self.max_messages = 5
+        self.max_messages = 1
         # Messaggi da non eliminare (con pulsanti)
         self.protected_messages: Dict[int, set] = {}
         
@@ -93,3 +93,19 @@ async def cleanup_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Middleware che registra automaticamente i messaggi"""
     if update.message:
         await register_user_message(update, context)
+
+async def delete_message_after_delay(message, delay=3):
+    """Elimina un messaggio dopo un delay"""
+    await asyncio.sleep(delay)
+    try:
+        await message.delete()
+    except:
+        pass
+
+async def instant_delete_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Modalità cancellazione istantanea per comandi"""
+    if update.message and update.message.text and update.message.text.startswith('/'):
+        # Elimina comando utente dopo 2 secondi
+        context.application.create_task(
+            delete_message_after_delay(update.message, 2)
+        )
