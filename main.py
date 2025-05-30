@@ -44,6 +44,11 @@ from handlers.report_handler import (
 )
 from handlers.settings_handler import (
     settings_command,
+    settings_callback,
+    update_rank,
+    update_irpef
+)
+    settings_command,
     settings_callback
 )
 
@@ -131,6 +136,12 @@ def main():
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
+    # Settings personal callbacks
+    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_change_"))
+    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_base_"))
+    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_command"))
+    application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
+    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
 
     # Back navigation handlers
     application.add_handler(CallbackQueryHandler(handle_back_callbacks, pattern="^back_to_"))
@@ -146,6 +157,60 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
+    
+    # Handler for text input in settings
+    async def handle_settings_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle text input for settings"""
+        if context.user_data.get('waiting_for_command'):
+            # User is entering command name
+            command_name = update.message.text
+            user_id = str(update.effective_user.id)
+            
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.telegram_id == user_id).first()
+                user.command = command_name
+                db.commit()
+                
+                await update.message.reply_text(
+                    f"✅ Comando aggiornato: <b>{command_name}</b>",
+                    parse_mode='HTML'
+                )
+                context.user_data['waiting_for_command'] = False
+            finally:
+                db.close()
+                
+        elif context.user_data.get('waiting_for_base_hours'):
+            # User is entering base hours
+            try:
+                hours = int(update.message.text)
+                if 1 <= hours <= 24:
+                    user_id = str(update.effective_user.id)
+                    
+                    db = SessionLocal()
+                    try:
+                        user = db.query(User).filter(User.telegram_id == user_id).first()
+                        user.base_shift_hours = hours
+                        db.commit()
+                        
+                        await update.message.reply_text(
+                            f"✅ Turno base aggiornato: <b>{hours} ore</b>",
+                            parse_mode='HTML'
+                        )
+                        context.user_data['waiting_for_base_hours'] = False
+                    finally:
+                        db.close()
+                else:
+                    await update.message.reply_text("❌ Inserisci un numero tra 1 e 24")
+            except ValueError:
+                await update.message.reply_text("❌ Inserisci un numero valido")
+    
+    # Add the text handler
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        handle_settings_text_input
+    ))
+
     application.run_polling()
 
 if __name__ == '__main__':

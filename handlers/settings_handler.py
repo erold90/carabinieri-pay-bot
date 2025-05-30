@@ -387,3 +387,29 @@ async def ask_base_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.callback_query.edit_message_text(text, parse_mode='HTML')
     
     context.user_data['waiting_for_base_hours'] = True
+
+async def show_rank_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show rank selection keyboard"""
+    await update_rank(update, context)
+
+async def show_irpef_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show IRPEF selection keyboard"""
+    await update_irpef(update, context)
+
+async def handle_settings_personal_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle personal settings modification callbacks"""
+    query = update.callback_query
+    await query.answer()
+    
+    data = query.data
+    
+    if data == "settings_change_rank":
+        await update_rank(update, context)
+    elif data == "settings_change_irpef":
+        await update_irpef(update, context)
+    elif data == "settings_base_hours":
+        await ask_base_hours(update, context)
+    elif data == "settings_command":
+        await ask_command(update, context)
+    elif data == "back_to_settings":
+        await settings_command(update, context)
