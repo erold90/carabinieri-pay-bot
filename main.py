@@ -198,30 +198,30 @@ def main():
     application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), settings_callback, pattern="^settings_"))
+    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
     
     # Specific handlers for service callbacks
     application.add_handler(CallbackQueryHandler(handle_service_type, pattern="^service_type_"))
     application.add_handler(CallbackQueryHandler(handle_status_selection, pattern="^status_"))
     application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meals_"))
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), handle_mission_type, pattern="^mission_type_"))
+    application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
     
     # Rank and IRPEF selection handlers
     application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_"))
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), update_irpef, pattern="^irpef_"))
+    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_"))
     
     # Navigation handlers
     application.add_handler(CallbackQueryHandler(start_command, pattern="^back_to_menu$"))
     application.add_handler(CallbackQueryHandler(settings_command, pattern="^back_to_settings$"))
     application.add_handler(CallbackQueryHandler(leave_command, pattern="^back_to_leave$"))
     application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^back_to_fv$"))
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), overtime_command, pattern="^back_overtime$"))
+    application.add_handler(CallbackQueryHandler(overtime_command, pattern="^back_overtime$"))
 
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^meal_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^setup_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
-    application.add_handler(CallbackQueryHandler(lambda u,c: u.callback_query.answer(), handle_missing_callbacks, pattern="^back$"))
+    application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
 
     # Leave edit handlers
     application.add_handler(CallbackQueryHandler(
