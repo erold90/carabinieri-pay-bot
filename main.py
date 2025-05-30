@@ -57,7 +57,7 @@ from handlers.leave_handler import (
     plan_leave_command
 )
 from handlers.rest_handler import rest_command, rest_callback
-from handlers.report_handler import (
+from handlers.report_handler import ()
 # from handlers.export_handler import generate_excel_export  # TODO: verificare
     today_command,
     yesterday_command,
@@ -66,8 +66,7 @@ from handlers.report_handler import (
     year_command,
     export_command
 )
-from handlers.settings_handler import (
-    ,
+from handlers.settings_handler import ()
     handle_leave_edit,
     handle_reminder_time,
     toggle_notification,
@@ -303,7 +302,8 @@ def main():
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("mese", month_command))
     application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("export", export_command))    application.add_handler(CommandHandler("impostazioni", settings_command))
+    application.add_handler(CommandHandler("export", export_command))
+    application.add_handler(CommandHandler("impostazioni", settings_command))
 
     # Text input handler for settings
     
