@@ -224,20 +224,16 @@ def main():
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
 
     # Leave edit handlers
-    application.add_handler(CallbackQueryHandler(
-    ))
+    application.add_handler(CallbackQueryHandler(handle_leave_edit, pattern="^(edit_current_leave_total|edit_current_leave_used|edit_previous_leave)$"))
     
     # Route handlers
-    application.add_handler(CallbackQueryHandler(
-    ))
+    application.add_handler(CallbackQueryHandler(handle_route_action, pattern="^(add_route|remove_route)$"))
     
     # Patron saint handler
-    application.add_handler(CallbackQueryHandler(
-    ))
+    application.add_handler(CallbackQueryHandler(handle_patron_saint, pattern="^set_patron_saint$"))
     
     # Notification time handler
-    application.add_handler(CallbackQueryHandler(
-    ))
+    application.add_handler(CallbackQueryHandler(handle_patron_saint, pattern="^set_patron_saint$"))
 
     # === HANDLER PER TUTTI I CALLBACK MANCANTI ===
 
