@@ -131,13 +131,12 @@ async def handle_status_selection(update: Update, context: ContextTypes.DEFAULT_
     else:
         text = ""
     
-    text += "\n⏰ <b>ORARIO SERVIZIO</b>\n\nOra di inizio?"
+    text += "\n⏰ <b>ORARIO SERVIZIO</b>\n\n"
+    text += "Inserisci l'orario di inizio (formato HH:MM):\n"
+    text += "Esempi: 06:30, 14:45, 22:00"
     
-    await query.edit_message_text(
-        text,
-        parse_mode='HTML',
-        reply_markup=get_time_keyboard(prefix="start_time")
-    )
+    await query.edit_message_text(text, parse_mode='HTML')
+    context.user_data['waiting_for_start_time'] = True
     
     return SELECT_TIME
 
@@ -776,14 +775,14 @@ service_conversation_handler = ConversationHandler(
             CallbackQueryHandler(handle_date_selection, pattern="^service_date_"),
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_date_selection)
         ],
+        
         SELECT_TIME: [
             CallbackQueryHandler(handle_status_selection, pattern="^status_"),
-            CallbackQueryHandler(handle_start_time, pattern="^start_time_")
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_time_input)
         ],
         SELECT_SERVICE_TYPE: [
-            CallbackQueryHandler(handle_end_time, pattern="^end_time_"),
             CallbackQueryHandler(handle_service_type, pattern="^service_type_"),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_recovery_hours)
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_time_input)
         ],
         SERVICE_DETAILS: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mission_destination)
