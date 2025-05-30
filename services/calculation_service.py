@@ -5,21 +5,56 @@ from datetime import date, timedelta, time, datetime
 from sqlalchemy.orm import Session
 import holidays
 
-from database.models import User, Service, Overtime, OvertimeType
+from database.models import User, Service, Overtime, OvertimeType, ServiceType
 from config.constants import OVERTIME_RATES, SERVICE_ALLOWANCES, MISSION_RATES, FORFEIT_RATES, MEAL_RATES, SUPER_HOLIDAYS
+
+def calculate_easter(year):
+    """Calcola la data di Pasqua per un dato anno usando l'algoritmo di Gauss"""
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    return date(year, month, day)
 
 def is_holiday(d: date, patron_saint_date: date = None) -> bool:
     """Checks if a date is a holiday in Italy, including Sundays and local patron saint day."""
     it_holidays = holidays.country_holidays('IT', years=d.year)
+    
+    # Aggiungi Pasqua e Pasquetta manualmente se non presenti
+    easter = calculate_easter(d.year)
+    easter_monday = easter + timedelta(days=1)
+    
+    # Aggiungi le date se non già presenti
+    if easter not in it_holidays:
+        it_holidays[easter] = "Pasqua"
+    if easter_monday not in it_holidays:
+        it_holidays[easter_monday] = "Pasquetta"
+    
     if patron_saint_date:
-        it_holidays.add(patron_saint_date)
-    return d in it_holidays or d.weekday() == 6
+        it_holidays[patron_saint_date] = "Santo Patrono"
+    
+    return d in it_holidays or d.weekday() == 6  # 6 = domenica
 
 def is_super_holiday(d: date) -> bool:
     """Checks if a date is a super holiday."""
-    easter_date = holidays.easter(d.year)
+    # Calcola Pasqua per l'anno corrente
+    easter_date = calculate_easter(d.year)
+    
+    # Controlla se è Pasqua o Pasquetta
     if d == easter_date or d == easter_date + timedelta(days=1):
         return True
+    
+    # Controlla le altre super festività
     return (d.month, d.day) in SUPER_HOLIDAYS
 
 def get_overtime_type(dt: datetime, is_h: bool) -> OvertimeType:
@@ -132,13 +167,6 @@ def calculate_service_total(db: Session, user: User, service: Service) -> dict:
     calculations['totals']['total'] = calculations['totals']['overtime'] + calculations['totals']['allowances'] + calculations['totals']['mission']
     
     return calculations
-
-def calculate_month_totals(db, user_id, month, year):
-    # This function remains the same as before
-    # ... (code from previous turn)
-    pass
-
-
 
 def calculate_month_totals(db, user_id, month, year):
     """Calculate monthly totals with error handling"""
