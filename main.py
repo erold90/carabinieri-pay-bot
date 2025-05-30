@@ -313,7 +313,7 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
-    start_notification_system(application.bot)
+    # start_notification_system(application.bot)
     application.run_polling()
 
 if __name__ == '__main__':
