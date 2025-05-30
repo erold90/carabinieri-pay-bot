@@ -14,7 +14,16 @@ from services.calculation_service import calculate_month_totals
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
-    user = update.effective_user
+    # Gestisci sia messaggi che callback query
+    if update.message:
+        user = update.message.from_user
+        chat_id = update.message.chat_id
+    elif update.callback_query:
+        user = update.callback_query.from_user
+        chat_id = update.callback_query.message.chat_id
+        await update.callback_query.answer()
+    else:
+        return
     
     # Get or create user
     db = SessionLocal()
@@ -25,7 +34,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Create new user
             db_user = User(
                 telegram_id=str(user.id),
-                chat_id=str(update.effective_chat.id),
+                chat_id=str(chat_id),
                 username=user.username,
                 first_name=user.first_name,
                 last_name=user.last_name
@@ -37,14 +46,22 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await send_welcome_setup(update, context, db_user)
         else:
             # Update chat_id if changed
-            if db_user.chat_id != str(update.effective_chat.id):
-                db_user.chat_id = str(update.effective_chat.id)
+            if db_user.chat_id != str(chat_id):
+                db_user.chat_id = str(chat_id)
                 db.commit()
             
             # Send dashboard
             await send_dashboard(update, context, db_user, db)
+    except Exception as e:
+        print(f"Errore in start_command: {e}")
+        error_message = "❌ Si è verificato un errore. Riprova con /start"
+        if update.message:
+            await (update.message or update.callback_query.message).reply_text(error_message)
+        elif update.callback_query:
+            await update.callback_query.message.reply_text(error_message)
     finally:
         db.close()
+
 
 async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User):
     """Send welcome message for new users"""
@@ -63,7 +80,7 @@ async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE,
         [InlineKeyboardButton("⚙️ Configura ora", callback_data="setup_start")]
     ]
     
-    await update.message.reply_text(
+    await (update.message or update.callback_query.message).reply_text(
         welcome_text,
         parse_mode='HTML',
         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -162,7 +179,7 @@ Comando: <b>{user.command or 'Da configurare'}</b>
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
-        await update.message.reply_text(
+        await (update.message or update.callback_query.message).reply_text(
             dashboard_text,
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup(keyboard)
