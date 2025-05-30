@@ -156,6 +156,15 @@ async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT
 
 
 
+# Debug handler - rimuovere in produzione
+async def debug_any_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log any received message for debugging"""
+    if update.message:
+        logger.info(f"DEBUG: Received message: {update.message.text} from {update.message.from_user.username}")
+    elif update.callback_query:
+        logger.info(f"DEBUG: Received callback: {update.callback_query.data}")
+
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -314,7 +323,9 @@ def main():
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
     # start_notification_system(application.bot)
-    application.run_polling()
+    logger.info("Bot started and polling for updates...")
+    logger.info(f"Bot username: @{application.bot.username if hasattr(application.bot, 'username') else 'Unknown'}")
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()
