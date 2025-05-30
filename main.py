@@ -293,7 +293,7 @@ def main():
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("mese", month_command))
     application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("export", export_command)), generate_excel_export))    application.add_handler(CommandHandler("impostazioni", settings_command))
+    application.add_handler(CommandHandler("export", export_command))    application.add_handler(CommandHandler("impostazioni", settings_command))
 
     # Text input handler for settings
     
