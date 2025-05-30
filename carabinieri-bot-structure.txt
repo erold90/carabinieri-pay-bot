@@ -1,0 +1,46 @@
+CarabinieriPayBot/
+│
+├── requirements.txt
+├── runtime.txt
+├── Procfile
+├── .env.example
+├── railway.json
+├── main.py
+│
+├── config/
+│   ├── __init__.py
+│   ├── settings.py
+│   └── constants.py
+│
+├── database/
+│   ├── __init__.py
+│   ├── connection.py
+│   ├── models.py
+│   └── migrations.py
+│
+├── handlers/
+│   ├── __init__.py
+│   ├── start_handler.py
+│   ├── service_handler.py
+│   ├── overtime_handler.py
+│   ├── travel_sheet_handler.py
+│   ├── leave_handler.py
+│   ├── report_handler.py
+│   └── settings_handler.py
+│
+├── services/
+│   ├── __init__.py
+│   ├── calculation_service.py
+│   ├── overtime_service.py
+│   ├── travel_sheet_service.py
+│   ├── leave_service.py
+│   └── report_service.py
+│
+├── utils/
+│   ├── __init__.py
+│   ├── keyboards.py
+│   ├── formatters.py
+│   └── validators.py
+│
+└── locales/
+    └── it.py
