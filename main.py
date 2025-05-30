@@ -57,6 +57,7 @@ from handlers.settings_handler import (
     update_rank,
     update_irpef
 )
+from handlers.setup_handler import setup_conversation_handler
 
 # Load environment variables
 load_dotenv()
@@ -102,6 +103,7 @@ def main():
     
     # Conversation handlers
     application.add_handler(service_conversation_handler)
+    application.add_handler(setup_conversation_handler)
     
     # Callback query handlers
     application.add_handler(CallbackQueryHandler(dashboard_callback, pattern="^dashboard_"))
