@@ -5,9 +5,6 @@ CarabinieriPayBot - Bot Telegram per il calcolo stipendi Carabinieri
 Main entry point
 """
 
-
-
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -66,19 +63,23 @@ from handlers.report_handler import ()
     year_command,
     export_command
 )
-from handlers.settings_handler import ()
-    handle_leave_edit,
-    handle_reminder_time,
-    toggle_notification,
-    handle_route_action,
-    handle_patron_saint
+from handlers.settings_handler import (
     settings_command,
     settings_callback,
     update_rank,
     update_irpef,
     handle_text_input,
     settings_command,
-    handle_patron_saint
+    settings_callback,
+    update_rank,
+    update_irpef,
+    handle_text_input,
+    settings_command,
+    handle_leave_edit,
+    handle_reminder_time,
+    toggle_notification,
+    handle_route_action,
+    handle_patron_saint,
 )
 from handlers.setup_handler import setup_conversation_handler
 
@@ -136,8 +137,6 @@ async def handle_missing_callbacks(update: Update, context: ContextTypes.DEFAULT
                 [InlineKeyboardButton("🏠 Menu Principale", callback_data="back_to_menu")]
             ])
         )
-
-
 
 # === FUNZIONI DI SUPPORTO PER CALLBACK ===
 
@@ -215,8 +214,6 @@ async def handle_generic_callback(update: Update, context: ContextTypes.DEFAULT_
             ])
         )
 
-
-
     # Handler per input di testo in vari contesti
     async def handle_general_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle all text inputs based on context"""
@@ -260,19 +257,16 @@ async def handle_generic_callback(update: Update, context: ContextTypes.DEFAULT_
         # Patron saint
         elif user_data.get('setting_patron_saint'):
             from handlers.leave_handler import handle_patron_saint_input
-            await handle_patron_saint_input(update, context)
             
         # Reminder time
         elif user_data.get('setting_reminder_time'):
             from handlers.leave_handler import handle_reminder_time_input
-            await handle_reminder_time_input(update, context)
     
     # Aggiungi handler generale per testo PRIMA dei conversation handler
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,
         handle_general_text_input
     ), group=1)
-
 
 def main():
     """Start the bot."""
@@ -343,30 +337,24 @@ def main():
 
     # Leave edit handlers
     application.add_handler(CallbackQueryHandler(
-        handle_leave_edit, pattern="^edit_.*_leave"
     ))
     
     # Route handlers
     application.add_handler(CallbackQueryHandler(
-        handle_route_action, pattern="^(add|remove)_route$"
     ))
     
     # Patron saint handler
     application.add_handler(CallbackQueryHandler(
-        handle_patron_saint, pattern="^set_patron_saint$"
     ))
     
     # Notification time handler
     application.add_handler(CallbackQueryHandler(
-        handle_reminder_time, pattern="^change_reminder_time$"
     ))
 
-    
     # === HANDLER PER TUTTI I CALLBACK MANCANTI ===
 
     # toggle_ callbacks (4 items)
     application.add_handler(CallbackQueryHandler(
-        toggle_notification,
         pattern="^(toggle_travel_sheet|toggle_leave_expiry|toggle_overtime_limit|toggle_daily_reminder)$"
     ))
 
@@ -388,34 +376,28 @@ def main():
         pattern="^remove_route$"
     ))
 
-
     # Handler per callback di modifica licenze
     application.add_handler(CallbackQueryHandler(
-        handle_leave_edit, 
         pattern="^(edit_current_leave_total|edit_current_leave_used|edit_previous_leave)$"
     ))
     
     # Handler per gestione percorsi
     application.add_handler(CallbackQueryHandler(
-        handle_route_action, 
         pattern="^(add_route|remove_route)$"
     ))
     
     # Handler per santo patrono
     application.add_handler(CallbackQueryHandler(
-        handle_patron_saint, 
         pattern="^set_patron_saint$"
     ))
     
     # Handler per orario notifiche
     application.add_handler(CallbackQueryHandler(
-        handle_reminder_time, 
         pattern="^change_reminder_time$"
     ))
     
     # Handler per toggle notifiche
     application.add_handler(CallbackQueryHandler(
-        toggle_notification,
         pattern="^(toggle_daily_reminder|toggle_overtime_limit|toggle_leave_expiry|toggle_travel_sheet)$"
     ))
     
@@ -424,7 +406,6 @@ def main():
         handle_meal_selection,
         pattern="^(meal_lunch|meal_dinner|meal_confirm)$"
     ))
-
 
 # Debug handler for unhandled callbacks
     async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
