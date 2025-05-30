@@ -60,6 +60,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# Additional callback handlers for navigation
+async def handle_back_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle all back navigation callbacks"""
+    query = update.callback_query
+    await query.answer()
+    
+    callback_data = query.data
+    
+    if callback_data == "back_to_menu":
+        await start_command(update, context)
+    elif callback_data == "back_to_settings":
+        await settings_command(update, context)
+    elif callback_data == "back_to_leave":
+        await leave_command(update, context)
+    elif callback_data == "back_to_fv":
+        await travel_sheets_command(update, context)
+    elif callback_data == "back_overtime":
+        await overtime_command(update, context)
+
+async def handle_setup_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle setup callbacks"""
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == "setup_start":
+        # Start setup wizard
+        text = "⚙️ <b>CONFIGURAZIONE INIZIALE</b>\n\n"
+        text += "Procediamo con la configurazione.\n\n"
+        text += "Usa /impostazioni per configurare i tuoi dati."
+        
+        await query.edit_message_text(text, parse_mode='HTML')
+
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -97,6 +131,11 @@ def main():
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
+
+    # Back navigation handlers
+    application.add_handler(CallbackQueryHandler(handle_back_callbacks, pattern="^back_to_"))
+    application.add_handler(CallbackQueryHandler(handle_setup_callbacks, pattern="^setup_"))
+    
     
     # Error handler
     async def error_handler(update: Update, context):
