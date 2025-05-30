@@ -71,7 +71,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 # Handler per callback mancanti
 async def handle_missing_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler generico per callback non implementati"""
@@ -129,10 +128,6 @@ def main():
     # DEVE essere il PRIMO handler con priority massima
     application.add_handler(MessageHandler(filters.ALL, cleanup_middleware), group=-999)
 
-    # Handler per auto-cancellazione comandi (massima priorità)
-    application.add_handler(MessageHandler(filters.ALL, lambda u,c: None))
-        filters.COMMAND, 
-    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))
@@ -150,12 +145,8 @@ def main():
     application.add_handler(CommandHandler("anno", year_command))
     application.add_handler(CommandHandler("export", export_command))
     application.add_handler(CommandHandler("impostazioni", settings_command))
-    
-    
+
     # Text input handler for settings
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, 
-        handle_text_input
     ))
     
     # Conversation handlers
@@ -185,15 +176,13 @@ def main():
     application.add_handler(CallbackQueryHandler(leave_command, pattern="^back_to_leave$"))
     application.add_handler(CallbackQueryHandler(travel_sheets_command, pattern="^back_to_fv$"))
     application.add_handler(CallbackQueryHandler(overtime_command, pattern="^back_overtime$"))
-    
-    
+
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^meal_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^setup_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back_"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
 
-    
     # Leave edit handlers
     application.add_handler(CallbackQueryHandler(
         handle_leave_edit, pattern="^edit_.*_leave"
