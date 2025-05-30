@@ -352,3 +352,101 @@ async def show_overtime_history(update: Update, context: ContextTypes.DEFAULT_TY
             [InlineKeyboardButton("⬅️ Indietro", callback_data="back_overtime")]
         ])
     )
+
+
+async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle paid overtime hours input"""
+    if not context.user_data.get('waiting_for_paid_hours'):
+        return
+    
+    try:
+        paid_hours = float(update.message.text.strip())
+        
+        if paid_hours < 0:
+            await update.message.reply_text("❌ Le ore non possono essere negative!")
+            return
+        
+        if paid_hours > 55:
+            await update.message.reply_text("❌ Massimo 55 ore pagate al mese!")
+            return
+        
+        user_id = str(update.effective_user.id)
+        current_date = get_current_date()
+        
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.telegram_id == user_id).first()
+            
+            # Aggiorna straordinari del mese come pagati
+            month_overtime = db.query(Overtime).filter(
+                Overtime.user_id == user.id,
+                extract('month', Overtime.date) == current_date.month,
+                extract('year', Overtime.date) == current_date.year,
+                Overtime.is_paid == False
+            ).order_by(Overtime.date).all()
+            
+            # Marca come pagate le ore fino al limite
+            hours_to_pay = paid_hours
+            paid_amount = 0
+            
+            for ot in month_overtime:
+                if hours_to_pay <= 0:
+                    break
+                
+                if ot.hours <= hours_to_pay:
+                    # Paga tutto questo record
+                    ot.is_paid = True
+                    ot.paid_date = current_date
+                    ot.payment_month = f"{current_date.year}-{current_date.month:02d}"
+                    hours_to_pay -= ot.hours
+                    paid_amount += ot.amount
+                else:
+                    # Paga parzialmente (split del record)
+                    paid_portion = hours_to_pay / ot.hours
+                    paid_value = ot.amount * paid_portion
+                    
+                    # Crea nuovo record per la parte pagata
+                    paid_ot = Overtime(
+                        user_id=ot.user_id,
+                        service_id=ot.service_id,
+                        date=ot.date,
+                        hours=hours_to_pay,
+                        overtime_type=ot.overtime_type,
+                        hourly_rate=ot.hourly_rate,
+                        amount=paid_value,
+                        is_paid=True,
+                        paid_date=current_date,
+                        payment_month=f"{current_date.year}-{current_date.month:02d}"
+                    )
+                    db.add(paid_ot)
+                    
+                    # Aggiorna record originale
+                    ot.hours -= hours_to_pay
+                    ot.amount -= paid_value
+                    
+                    paid_amount += paid_value
+                    hours_to_pay = 0
+            
+            db.commit()
+            
+            text = f"✅ <b>PAGAMENTO REGISTRATO</b>\n\n"
+            text += f"Ore pagate: {paid_hours:.0f}h\n"
+            text += f"Importo: {format_currency(paid_amount)}\n\n"
+            text += "Le ore sono state marcate come pagate nel sistema."
+            
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("⏰ Torna agli straordinari", callback_data="back_overtime")]
+            ])
+            
+            await update.message.reply_text(
+                text,
+                parse_mode='HTML',
+                reply_markup=keyboard
+            )
+            
+        finally:
+            db.close()
+            context.user_data['waiting_for_paid_hours'] = False
+            
+    except ValueError:
+        await update.message.reply_text("❌ Inserisci un numero valido!")

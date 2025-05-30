@@ -53,6 +53,69 @@ async def new_service_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     return SELECT_DATE
 
+
+async def handle_date_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle manual date input"""
+    text = update.message.text.strip()
+    
+    try:
+        # Parse date in format GG/MM/AAAA
+        parts = text.split('/')
+        if len(parts) == 3:
+            day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+            service_date = date(year, month, day)
+            
+            # Validate date
+            if service_date > date.today() + timedelta(days=7):
+                await update.message.reply_text(
+                    "❌ Non puoi inserire servizi futuri oltre 7 giorni!",
+                    parse_mode='HTML'
+                )
+                return SELECT_DATE
+            
+            context.user_data['service_date'] = service_date
+            
+            # Check if holiday
+            is_holiday_day = is_holiday(service_date)
+            is_super = is_super_holiday(service_date)
+            
+            date_str = format_date(service_date)
+            if is_super:
+                date_str += " (🎄 SUPER-FESTIVO)"
+            elif is_holiday_day:
+                date_str += " (🔴 Festivo)"
+            
+            # Ask for status
+            text = f"📅 Data: <b>{date_str}</b>\n\n"
+            text += "⚠️ <b>STATO PERSONALE</b> per questa data:\n"
+            
+            keyboard = [
+                [InlineKeyboardButton("🟢 In servizio ordinario", callback_data="status_normal")],
+                [InlineKeyboardButton("🏖️ In LICENZA", callback_data="status_leave")],
+                [InlineKeyboardButton("🔄 Riposo settimanale", callback_data="status_rest")],
+                [InlineKeyboardButton("⏰ Recupero ore", callback_data="status_recovery")],
+                [InlineKeyboardButton("📋 Altro permesso", callback_data="status_other")]
+            ]
+            
+            await update.message.reply_text(
+                text,
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            
+            return SELECT_TIME
+            
+    except (ValueError, IndexError):
+        await update.message.reply_text(
+            "❌ Formato data non valido!\n\n"
+            "Usa il formato: GG/MM/AAAA\n"
+            "Esempio: 25/05/2024",
+            parse_mode='HTML'
+        )
+        return SELECT_DATE
+
+
+
 async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle date selection"""
     query = update.callback_query

@@ -259,3 +259,125 @@ async def search_travel_sheet(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def export_travel_sheets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Export travel sheets to Excel"""
     await update.callback_query.answer("Funzione in sviluppo", show_alert=True)
+
+
+
+async def handle_travel_sheet_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle travel sheet payment selection"""
+    if not context.user_data.get('waiting_for_fv_selection'):
+        return
+    
+    text = update.message.text.strip().lower()
+    user_id = str(update.effective_user.id)
+    
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        unpaid_sheets = context.user_data.get('unpaid_sheets', {})
+        
+        sheets_to_pay = []
+        
+        if text == 'tutti':
+            # Paga tutti
+            sheets_to_pay = list(unpaid_sheets.values())
+        else:
+            # Parse numeri selezionati
+            try:
+                numbers = [int(n.strip()) for n in text.split(',')]
+                for num in numbers:
+                    if str(num) in unpaid_sheets:
+                        sheets_to_pay.append(unpaid_sheets[str(num)])
+            except ValueError:
+                await update.message.reply_text(
+                    "❌ Formato non valido! Usa numeri separati da virgola o 'tutti'"
+                )
+                return
+        
+        if not sheets_to_pay:
+            await update.message.reply_text("❌ Nessun foglio viaggio selezionato!")
+            return
+        
+        # Registra pagamento
+        current_date = get_current_date()
+        total_amount = 0
+        
+        for sheet_id in sheets_to_pay:
+            sheet = db.query(TravelSheet).filter(TravelSheet.id == sheet_id).first()
+            if sheet:
+                sheet.is_paid = True
+                sheet.paid_date = current_date
+                sheet.payment_reference = f"PAG-{current_date.strftime('%Y%m%d')}"
+                total_amount += sheet.amount
+        
+        db.commit()
+        
+        text = f"✅ <b>PAGAMENTO REGISTRATO</b>\n\n"
+        text += f"Fogli viaggio pagati: {len(sheets_to_pay)}\n"
+        text += f"Importo totale: {format_currency(total_amount)}\n\n"
+        text += f"Data pagamento: {format_date(current_date)}\n"
+        text += f"Riferimento: PAG-{current_date.strftime('%Y%m%d')}"
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📋 Torna ai fogli viaggio", callback_data="back_to_fv")]
+        ])
+        
+        await update.message.reply_text(
+            text,
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+        
+    finally:
+        db.close()
+        context.user_data['waiting_for_fv_selection'] = False
+        context.user_data['unpaid_sheets'] = {}
+
+async def handle_travel_sheet_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle travel sheet search"""
+    if not context.user_data.get('waiting_for_fv_search'):
+        return
+    
+    search_term = update.message.text.strip()
+    user_id = str(update.effective_user.id)
+    
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        
+        # Cerca per numero FV o destinazione
+        sheets = db.query(TravelSheet).filter(
+            TravelSheet.user_id == user.id,
+            or_(
+                TravelSheet.sheet_number.contains(search_term),
+                TravelSheet.destination.contains(search_term)
+            )
+        ).order_by(TravelSheet.date.desc()).limit(10).all()
+        
+        if not sheets:
+            await update.message.reply_text(
+                f"❌ Nessun foglio viaggio trovato per: {search_term}",
+                parse_mode='HTML',
+                reply_markup=get_back_keyboard("back_to_fv")
+            )
+            return
+        
+        text = f"🔍 <b>RISULTATI RICERCA</b>\n"
+        text += f"Termine: {search_term}\n\n"
+        
+        for sheet in sheets:
+            status = "✅ PAGATO" if sheet.is_paid else "⏳ In attesa"
+            text += f"📋 F.V. {sheet.sheet_number}\n"
+            text += f"├ Data: {format_date(sheet.date)}\n"
+            text += f"├ Destinazione: {sheet.destination}\n"
+            text += f"├ Importo: {format_currency(sheet.amount)}\n"
+            text += f"└ Stato: {status}\n\n"
+        
+        await update.message.reply_text(
+            text,
+            parse_mode='HTML',
+            reply_markup=get_back_keyboard("back_to_fv")
+        )
+        
+    finally:
+        db.close()
+        context.user_data['waiting_for_fv_search'] = False

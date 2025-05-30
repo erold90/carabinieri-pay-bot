@@ -15,6 +15,7 @@ from utils.clean_chat import cleanup_middleware
 
 # Import database
 from database.connection import init_db
+from services.notification_service import start_notification_system
 
 # Import tutti gli handler necessari
 from handlers.start_handler import start_command, dashboard_callback
@@ -46,6 +47,7 @@ from handlers.leave_handler import (
     plan_leave_command
 )
 from handlers.report_handler import (
+from handlers.export_handler import generate_excel_export
     today_command,
     yesterday_command,
     week_command,
@@ -204,6 +206,64 @@ async def handle_generic_callback(update: Update, context: ContextTypes.DEFAULT_
         )
 
 
+
+    # Handler per input di testo in vari contesti
+    async def handle_general_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle all text inputs based on context"""
+        user_data = context.user_data
+        
+        # Overtime: ore pagate
+        if user_data.get('waiting_for_paid_hours'):
+            from handlers.overtime_handler import handle_paid_hours_input
+            await handle_paid_hours_input(update, context)
+            
+        # Travel sheets: selezione FV da pagare
+        elif user_data.get('waiting_for_fv_selection'):
+            from handlers.travel_sheet_handler import handle_travel_sheet_selection
+            await handle_travel_sheet_selection(update, context)
+            
+        # Travel sheets: ricerca
+        elif user_data.get('waiting_for_fv_search'):
+            from handlers.travel_sheet_handler import handle_travel_sheet_search
+            await handle_travel_sheet_search(update, context)
+            
+        # Settings: vari input
+        elif user_data.get('waiting_for_command') or user_data.get('waiting_for_base_hours'):
+            from handlers.settings_handler import handle_text_input
+            await handle_text_input(update, context)
+            
+        # Leave: modifica valori
+        elif user_data.get('waiting_for_leave_value'):
+            from handlers.leave_handler import handle_leave_value_input
+            await handle_leave_value_input(update, context)
+            
+        # Routes: nome percorso
+        elif user_data.get('adding_route'):
+            from handlers.leave_handler import handle_route_name_input
+            await handle_route_name_input(update, context)
+            
+        # Routes: km percorso
+        elif user_data.get('adding_route_km'):
+            from handlers.leave_handler import handle_route_km_input
+            await handle_route_km_input(update, context)
+            
+        # Patron saint
+        elif user_data.get('setting_patron_saint'):
+            from handlers.leave_handler import handle_patron_saint_input
+            await handle_patron_saint_input(update, context)
+            
+        # Reminder time
+        elif user_data.get('setting_reminder_time'):
+            from handlers.leave_handler import handle_reminder_time_input
+            await handle_reminder_time_input(update, context)
+    
+    # Aggiungi handler generale per testo PRIMA dei conversation handler
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        handle_general_text_input
+    ), group=1)
+
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -231,8 +291,7 @@ def main():
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("mese", month_command))
     application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("export", export_command))
-    application.add_handler(CommandHandler("impostazioni", settings_command))
+    application.add_handler(CommandHandler("export", export_command)), generate_excel_export))    application.add_handler(CommandHandler("impostazioni", settings_command))
 
     # Text input handler for settings
     
@@ -377,6 +436,7 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
+    start_notification_system(application.bot)
     application.run_polling()
 
 if __name__ == '__main__':

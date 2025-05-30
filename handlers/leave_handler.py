@@ -543,3 +543,188 @@ async def show_leave_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Indietro", callback_data="back_to_leave")]
         ])
     )
+
+
+async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle leave value input for editing"""
+    if not context.user_data.get('waiting_for_leave_value'):
+        return
+    
+    try:
+        value = int(update.message.text.strip())
+        if value < 0 or value > 50:
+            await update.message.reply_text("❌ Inserisci un valore tra 0 e 50")
+            return
+        
+        user_id = str(update.effective_user.id)
+        editing_type = context.user_data.get('editing_leave')
+        
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.telegram_id == user_id).first()
+            
+            if 'current_leave_total' in editing_type:
+                user.current_year_leave = value
+                field = "Licenza totale anno corrente"
+            elif 'current_leave_used' in editing_type:
+                user.current_year_leave_used = value
+                field = "Licenza utilizzata"
+            elif 'previous_leave' in editing_type:
+                user.previous_year_leave = value
+                field = "Licenza residua anno precedente"
+            
+            db.commit()
+            
+            await update.message.reply_text(
+                f"✅ {field} aggiornata: {value} giorni",
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🏖️ Torna alle licenze", callback_data="settings_leaves")]
+                ])
+            )
+            
+        finally:
+            db.close()
+            context.user_data['waiting_for_leave_value'] = False
+            context.user_data['editing_leave'] = None
+            
+    except ValueError:
+        await update.message.reply_text("❌ Inserisci un numero valido!")
+
+async def handle_route_name_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle route name input"""
+    if not context.user_data.get('adding_route'):
+        return
+    
+    route_name = update.message.text.strip()
+    context.user_data['route_name'] = route_name
+    context.user_data['adding_route'] = False
+    context.user_data['adding_route_km'] = True
+    
+    await update.message.reply_text(
+        f"📏 Quanti km è il percorso '{route_name}'?",
+        parse_mode='HTML'
+    )
+
+async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle route km input"""
+    if not context.user_data.get('adding_route_km'):
+        return
+    
+    try:
+        km = int(update.message.text.strip())
+        if km <= 0:
+            await update.message.reply_text("❌ I km devono essere maggiori di 0!")
+            return
+        
+        user_id = str(update.effective_user.id)
+        route_name = context.user_data.get('route_name')
+        
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.telegram_id == user_id).first()
+            
+            if not user.saved_routes:
+                user.saved_routes = {}
+            
+            user.saved_routes[route_name] = {'km': km}
+            db.commit()
+            
+            await update.message.reply_text(
+                f"✅ Percorso salvato!\n\n"
+                f"📍 {route_name}: {km} km",
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📍 Torna ai percorsi", callback_data="settings_location")]
+                ])
+            )
+            
+        finally:
+            db.close()
+            context.user_data['adding_route_km'] = False
+            context.user_data['route_name'] = None
+            
+    except ValueError:
+        await update.message.reply_text("❌ Inserisci un numero valido!")
+
+async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle patron saint date input"""
+    if not context.user_data.get('setting_patron_saint'):
+        return
+    
+    text = update.message.text.strip()
+    
+    try:
+        parts = text.split('/')
+        if len(parts) == 2:
+            day, month = int(parts[0]), int(parts[1])
+            # Usa anno corrente per validazione
+            patron_date = date(datetime.now().year, month, day)
+            
+            user_id = str(update.effective_user.id)
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.telegram_id == user_id).first()
+                user.patron_saint_date = patron_date
+                db.commit()
+                
+                await update.message.reply_text(
+                    f"✅ Santo Patrono impostato: {day:02d}/{month:02d}",
+                    parse_mode='HTML',
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("📍 Torna alle impostazioni", callback_data="settings_location")]
+                    ])
+                )
+                
+            finally:
+                db.close()
+                context.user_data['setting_patron_saint'] = False
+                
+    except (ValueError, IndexError):
+        await update.message.reply_text(
+            "❌ Formato non valido! Usa GG/MM (es: 29/09)"
+        )
+
+async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle reminder time input"""
+    if not context.user_data.get('setting_reminder_time'):
+        return
+    
+    text = update.message.text.strip()
+    
+    try:
+        parts = text.split(':')
+        if len(parts) == 2:
+            hour, minute = int(parts[0]), int(parts[1])
+            if 0 <= hour <= 23 and 0 <= minute <= 59:
+                time_str = f"{hour:02d}:{minute:02d}"
+                
+                user_id = str(update.effective_user.id)
+                db = SessionLocal()
+                try:
+                    user = db.query(User).filter(User.telegram_id == user_id).first()
+                    
+                    if not user.notification_settings:
+                        user.notification_settings = {}
+                    
+                    user.notification_settings['reminder_time'] = time_str
+                    db.commit()
+                    
+                    await update.message.reply_text(
+                        f"✅ Orario notifiche impostato: {time_str}",
+                        parse_mode='HTML',
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("🔔 Torna alle notifiche", callback_data="settings_notifications")]
+                        ])
+                    )
+                    
+                finally:
+                    db.close()
+                    context.user_data['setting_reminder_time'] = False
+            else:
+                raise ValueError("Orario non valido")
+                
+    except (ValueError, IndexError):
+        await update.message.reply_text(
+            "❌ Formato non valido! Usa HH:MM (es: 09:00)"
+        )
