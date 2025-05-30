@@ -66,7 +66,7 @@ def main():
     init_db()
     
     # Create the Application
-    application = Application.builder().token(os.getenv('BOT_TOKEN')).build()
+    application = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))).build()
 
     # Command handlers
     application.add_handler(CommandHandler("start", start_command))

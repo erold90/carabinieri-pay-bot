@@ -16,7 +16,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 TIMEZONE = pytz.timezone('Europe/Rome')
 
 # Bot settings
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
 MAX_OVERTIME_HOURS_MONTHLY = 55
 ANNUAL_LEAVE_DAYS = 32
 
