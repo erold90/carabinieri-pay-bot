@@ -191,6 +191,27 @@ def main():
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
     application.add_handler(CallbackQueryHandler(handle_missing_callbacks, pattern="^back$"))
 
+    
+    # Leave edit handlers
+    application.add_handler(CallbackQueryHandler(
+        handle_leave_edit, pattern="^edit_.*_leave"
+    ))
+    
+    # Route handlers
+    application.add_handler(CallbackQueryHandler(
+        handle_route_action, pattern="^(add|remove)_route$"
+    ))
+    
+    # Patron saint handler
+    application.add_handler(CallbackQueryHandler(
+        handle_patron_saint, pattern="^set_patron_saint$"
+    ))
+    
+    # Notification time handler
+    application.add_handler(CallbackQueryHandler(
+        handle_reminder_time, pattern="^change_reminder_time$"
+    ))
+
     # Debug handler for unhandled callbacks
     async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
