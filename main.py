@@ -5,6 +5,16 @@ CarabinieriPayBot - Bot Telegram per il calcolo stipendi Carabinieri
 Main entry point
 """
 
+
+
+
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+CarabinieriPayBot - Bot Telegram per il calcolo stipendi Carabinieri
+Main entry point
+"""
+
 import logging
 import os
 from telegram import Update
