@@ -561,7 +561,16 @@ async def handle_meals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
-    meals = int(query.data.replace("meals_", ""))
+    # Handle both numeric meals and confirm
+    if query.data == "meal_confirm":
+        # User confirmed meal selection
+        return await show_service_summary(update, context)
+    
+    try:
+        meals = int(query.data.replace("meals_", ""))
+    except ValueError:
+        # Not a number, handle meal selection
+        return await handle_meal_selection(update, context)
     context.user_data['meals_consumed'] = meals
     
     # Calculate meal reimbursement
@@ -924,6 +933,62 @@ async def handle_travel_type_input(update: Update, context: ContextTypes.DEFAULT
         parse_mode='HTML'
     )
     return ConversationHandler.END
+
+
+async def handle_meal_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle meal checkbox selection"""
+    query = update.callback_query
+    await query.answer()
+    
+    meal_type = query.data.replace("meal_", "")
+    
+    # Toggle meal selection
+    if 'selected_meals' not in context.user_data:
+        context.user_data['selected_meals'] = set()
+    
+    if meal_type in context.user_data['selected_meals']:
+        context.user_data['selected_meals'].remove(meal_type)
+    else:
+        context.user_data['selected_meals'].add(meal_type)
+    
+    # Calculate meal reimbursement
+    meals_not_consumed = len(context.user_data['selected_meals'])
+    meal_reimbursement = 0
+    
+    if meals_not_consumed == 1:
+        meal_reimbursement = MEAL_RATES['single_meal_net']
+    elif meals_not_consumed == 2:
+        meal_reimbursement = MEAL_RATES['double_meal_net']
+    
+    context.user_data['meal_reimbursement'] = meal_reimbursement
+    context.user_data['meals_not_consumed'] = meals_not_consumed
+    
+    # Update message
+    text = "🍽️ <b>PASTI NON CONSUMATI</b>\n\n"
+    text += "Seleziona i pasti che NON hai consumato:\n\n"
+    
+    lunch_check = "☑️" if "lunch" in context.user_data['selected_meals'] else "☐"
+    dinner_check = "☑️" if "dinner" in context.user_data['selected_meals'] else "☐"
+    
+    text += f"{lunch_check} Pranzo\n"
+    text += f"{dinner_check} Cena\n\n"
+    
+    if meal_reimbursement > 0:
+        text += f"💰 Rimborso pasti: {format_currency(meal_reimbursement)}\n\n"
+    
+    keyboard = [
+        [
+            InlineKeyboardButton(f"{lunch_check} Pranzo", callback_data="meal_lunch"),
+            InlineKeyboardButton(f"{dinner_check} Cena", callback_data="meal_dinner")
+        ],
+        [InlineKeyboardButton("✅ Conferma", callback_data="meal_confirm")]
+    ]
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='HTML',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 service_conversation_handler = ConversationHandler(
     entry_points=[

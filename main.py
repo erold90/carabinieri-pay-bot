@@ -25,7 +25,8 @@ from handlers.service_handler import (
     handle_meals,
     handle_mission_type,
     handle_time_input
-)
+,
+    handle_meal_selection)
 from handlers.overtime_handler import (
     overtime_command,
     overtime_callback,
