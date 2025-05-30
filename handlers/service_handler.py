@@ -306,26 +306,51 @@ async def handle_travel_sheet_number(update: Update, context: ContextTypes.DEFAU
         parse_mode='HTML'
     )
     
+    context.user_data['waiting_for_destination'] = True
     return TRAVEL_TYPE
 
 async def handle_destination(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle destination input"""
+    if not context.user_data.get('waiting_for_destination'):
+        return TRAVEL_TYPE
+        
     context.user_data['destination'] = update.message.text
+    context.user_data['waiting_for_destination'] = False
     
-    # Ask for detailed timing
-    text = "⏱️ <b>TIMING DETTAGLIATO</b>\n\n"
-    text += "Inserisci gli orari nel formato HH:MM\n\n"
-    text += "<b>1️⃣ ANDATA (senza VIP):</b>\n"
-    text += "Ora partenza dalla sede:"
+    # Controlla se siamo in un servizio di scorta o missione
+    service_type = context.user_data.get('service_type')
     
-    await update.message.reply_text(text, parse_mode='HTML')
-    
-    context.user_data['escort_phase'] = 'departure_time'
-    return TRAVEL_TYPE
+    if service_type == ServiceType.ESCORT:
+        # Per scorta, chiedi il timing dettagliato
+        text = "⏱️ <b>TIMING DETTAGLIATO</b>\n\n"
+        text += "Inserisci gli orari nel formato HH:MM\n\n"
+        text += "<b>1️⃣ ANDATA (senza VIP):</b>\n"
+        text += "Ora partenza dalla sede:"
+        
+        await update.message.reply_text(text, parse_mode='HTML')
+        
+        context.user_data['escort_phase'] = 'departure_time'
+        context.user_data['waiting_for_escort_timing'] = True
+        return TRAVEL_TYPE
+    else:
+        # Per missione, chiedi i km
+        await update.message.reply_text(
+            "🚗 Chilometri totali (se applicabile, altrimenti 0):",
+            parse_mode='HTML'
+        )
+        
+        context.user_data['waiting_for_km'] = True
+        return TRAVEL_TYPE
 
 async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle escort timing details"""
+    if not context.user_data.get('waiting_for_escort_timing'):
+        return TRAVEL_TYPE
+        
     phase = context.user_data.get('escort_phase')
+    if not phase:
+        return TRAVEL_TYPE
+        phase = context.user_data.get('escort_phase')
     
     try:
         # Parse time input
@@ -721,6 +746,16 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
         db = SessionLocal()
         try:
             service = context.user_data['service']
+            
+            # Verifica dati prima del salvataggio
+            print(f"[DEBUG] Salvataggio servizio:")
+            print(f"  - Data: {service.date}")
+            print(f"  - Orario: {service.start_time} - {service.end_time}")
+            print(f"  - Tipo: {service.service_type}")
+            print(f"  - FV: {service.travel_sheet_number}")
+            print(f"  - Destinazione: {service.destination}")
+            print(f"  - Km: {service.km_total}")
+
             db.add(service)
             
             # Create travel sheet if escort
@@ -866,6 +901,30 @@ async def handle_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
        )
        return SELECT_TIME
 
+
+async def handle_travel_type_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle all inputs in TRAVEL_TYPE state"""
+    text = update.message.text
+    
+    # Se stiamo aspettando la destinazione
+    if context.user_data.get('waiting_for_destination'):
+        return await handle_destination(update, context)
+    
+    # Se stiamo aspettando timing escort
+    elif context.user_data.get('waiting_for_escort_timing'):
+        return await handle_escort_timing(update, context)
+    
+    # Se stiamo aspettando km
+    elif context.user_data.get('waiting_for_km'):
+        return await handle_mission_km(update, context)
+    
+    # Default: non dovremmo arrivare qui
+    await update.message.reply_text(
+        "❌ Errore: stato non riconosciuto. Usa /start per ricominciare.",
+        parse_mode='HTML'
+    )
+    return ConversationHandler.END
+
 service_conversation_handler = ConversationHandler(
     entry_points=[
         CommandHandler("nuovo", new_service_command),
@@ -893,8 +952,7 @@ service_conversation_handler = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_travel_sheet_number)
         ],
         TRAVEL_TYPE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_escort_timing),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mission_km)
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_travel_type_input)
         ],
         MEAL_DETAILS: [
             CallbackQueryHandler(handle_mission_type, pattern="^mission_type_")
