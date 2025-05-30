@@ -54,11 +54,19 @@ from handlers.report_handler import (
     export_command
 )
 from handlers.settings_handler import (
+    ,
+    handle_leave_edit,
+    handle_reminder_time,
+    toggle_notification,
+    handle_route_action,
+    handle_patron_saint
     settings_command,
     settings_callback,
     update_rank,
     update_irpef,
-    handle_text_input
+    handle_text_input,
+    settings_command,
+    handle_patron_saint
 )
 from handlers.setup_handler import setup_conversation_handler
 
