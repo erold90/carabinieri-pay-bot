@@ -410,12 +410,10 @@ def main():
     # logger.info(f"Bot username: @{application.bot.username if hasattr(application.bot, 'username') else 'Unknown'}")
     
     # Avvia sistema di notifiche
-    try:
-        from services.notification_service import start_notification_system
-        logger.info("Avvio sistema notifiche...")
+    # try:
+    # from services.notification_service import start_notification_system  # DISABILITATO - BLOCCAVA IL BOT
+    # logger.info("Avvio sistema notifiche...")
     # start_notification_system(application.bot)  # Disabilitato temporaneamente
-    except Exception as e:
-        logger.error(f"Impossibile avviare notifiche: {e}")
 
     # Handler per callback non gestiti - DEVE essere l'ultimo!
     async def handle_unknown_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
