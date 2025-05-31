@@ -113,4 +113,47 @@ class InputHandler:
         from handlers.service_handler import handle_time_input
         await handle_time_input(update, context)
     
-    # ... implementare altri handler specifici ...
+    async def _handle_leave_value_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input valore licenze"""
+        from handlers.leave_handler import handle_leave_value_input
+        await handle_leave_value_input(update, context)
+    
+    async def _handle_route_name_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input nome percorso"""
+        from handlers.leave_handler import handle_route_name_input
+        await handle_route_name_input(update, context)
+    
+    async def _handle_route_km_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input km percorso"""
+        from handlers.leave_handler import handle_route_km_input
+        await handle_route_km_input(update, context)
+    
+    async def _handle_patron_saint_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input santo patrono"""
+        from handlers.leave_handler import handle_patron_saint_input
+        await handle_patron_saint_input(update, context)
+    
+    async def _handle_reminder_time_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input orario reminder"""
+        from handlers.leave_handler import handle_reminder_time_input
+        await handle_reminder_time_input(update, context)
+    
+    async def _handle_paid_hours_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input ore pagate"""
+        from handlers.overtime_handler import handle_paid_hours_input
+        await handle_paid_hours_input(update, context)
+    
+    async def _handle_fv_selection_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce selezione fogli viaggio"""
+        from handlers.travel_sheet_handler import handle_travel_sheet_selection
+        await handle_travel_sheet_selection(update, context)
+    
+    async def _handle_fv_search_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce ricerca fogli viaggio"""
+        from handlers.travel_sheet_handler import handle_travel_sheet_search
+        await handle_travel_sheet_search(update, context)
+    
+    async def _handle_end_time_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Gestisce input orario fine"""
+        from handlers.service_handler import handle_time_input
+        await handle_time_input(update, context)
