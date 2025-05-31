@@ -276,6 +276,15 @@ def main():
     application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
     application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
     application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
+    application.add_handler(CommandHandler("ieri", yesterday_command))
+    application.add_handler(CommandHandler("settimana", week_command))
+    application.add_handler(CommandHandler("anno", year_command))
+    application.add_handler(CommandHandler("export", export_command))
+    application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
+    application.add_handler(CommandHandler("accumulo", accumulation_command))
+    application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
+    application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
+    application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
     # CRITICAL: Conversation handlers - DEVONO essere prima dei callback generici!
     application.add_handler(service_conversation_handler)
     application.add_handler(setup_conversation_handler)
@@ -365,6 +374,24 @@ def main():
             await query.answer("Funzione in sviluppo", show_alert=True)
     
     application.add_handler(CallbackQueryHandler(handle_unknown_callback))
+
+    # Handler per callback non gestiti - DEVE essere l'ultimo!
+    async def handle_unknown_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+        
+        callback_data = query.data
+        logger.warning(f"Callback non implementato: {callback_data}")
+        
+        if "back_to_menu" in callback_data:
+            await start_command(update, context)
+        elif "setup_start" in callback_data:
+            await query.answer("Usa /impostazioni per configurare il profilo", show_alert=True)
+        else:
+            await query.answer("Funzione in sviluppo", show_alert=True)
+    
+    application.add_handler(CallbackQueryHandler(handle_unknown_callback))
+
     
     application.run_polling()
 
