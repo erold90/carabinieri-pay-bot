@@ -647,12 +647,13 @@ async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TY
             
             db.close()
             context.user_data['adding_route_km'] = False
-            context.user_data['route_name'] = None
+            try:
+#             context.user_data['route_name'] = None
             
-    except ValueError:
-        await update.message.reply_text("❌ Inserisci un numero valido!")
+#     except ValueError:
+#         await update.message.reply_text("❌ Inserisci un numero valido!")
 
-async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle patron saint date input"""
     if not context.user_data.get('setting_patron_saint'):
         return
