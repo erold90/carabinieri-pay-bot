@@ -66,11 +66,8 @@ class Rest(Base):
     
     # Relationships
     user = relationship("User", back_populates="rests")
-    # rest_replaced = relationship("Rest", back_populates="service", uselist=False)  # FIXME: Relazione circolare
-    service = relationship("Service", back_populates="rest_replaced")
 
 # Aggiungi relazione in Service
-    # # rest_replaced = relationship("Rest", back_populates="service", uselist=False)  # FIXME: Relazione circolare
 
 # Aggiungi in User
 # rests = relationship("Rest", back_populates="user", cascade="all, delete-orphan")
