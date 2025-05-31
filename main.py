@@ -352,11 +352,15 @@ def main():
         os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
     ).build()
 
-    # Aggiungi job periodici
-    job_queue = application.job_queue
-    
-    # Garbage collection ogni 30 minuti
-    job_queue.run_repeating(periodic_gc, interval=1800, first=600)
+    # Aggiungi job periodici (se disponibile)
+    if application.job_queue:
+        job_queue = application.job_queue
+        
+        # Garbage collection ogni 30 minuti
+        job_queue.run_repeating(periodic_gc, interval=1800, first=600)
+        logger.info("✅ Job Queue configurato")
+    else:
+        logger.warning("⚠️ Job Queue non disponibile - garbage collection disabilitato")
     
     
 
