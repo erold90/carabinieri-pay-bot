@@ -371,18 +371,13 @@ async def start_bot(application):
 async def log_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log ogni update per debug"""
     if update.message:
-        # logger\.debug\(f"📨 Message update:.*?
+        logger.debug(f"📨 Message update: {update.message.text} from {update.effective_user.id}")
     elif update.callback_query:
-        pass
-        # logger\.debug\(f"🔘 Callback update:.*?
+        logger.debug(f"🔘 Callback update: {update.callback_query.data}")
     elif update.edited_message:
         logger.debug(f"✏️ Edited message update")
     else:
-        # logger\.debug\(f"❓ Other update type:.*?
-
-
-# Debug: log OGNI interazione con Telegram
-logger.info("🔍 DEBUG MODE ATTIVO")
+        logger.debug(f"❓ Other update type: {update}")
 
 async def debug_middleware(update, context):
     """Log tutto per debug"""
