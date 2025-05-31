@@ -163,7 +163,7 @@ async def handle_back_navigation(update: Update, context: ContextTypes.DEFAULT_T
         await start_command(update, context)
 
 # Handler debug per callback non gestiti
-async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Debug handler for unhandled callbacks"""
     query = update.callback_query
     await query.answer()
@@ -434,7 +434,7 @@ def main():
 
     # DEBUG: Log TUTTI gli update ricevuti
 # Debug handler for unhandled callbacks
-    async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
         logger.warning(f"Callback non gestito: {query.data}")
