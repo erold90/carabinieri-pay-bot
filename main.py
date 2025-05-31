@@ -40,6 +40,7 @@ from handlers.service_handler import (
     handle_mission_type,
     handle_time_input,
     handle_meal_selection
+    handle_confirmation
 )
 from handlers.overtime_handler import (
     overtime_command,
@@ -460,13 +461,13 @@ async def main():
     application.add_handler(CallbackQueryHandler(handle_reminder_time, pattern="^change_reminder_time$"))
     application.add_handler(CallbackQueryHandler(handle_meal_selection, pattern="^meal_(lunch|dinner)$"))
     application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meal_confirm$"))
+    application.add_handler(CallbackQueryHandler(handle_confirmation, pattern="^confirm_"))
     application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
     application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_[0-9]+$"))
     application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_[0-9]+$"))
     application.add_handler(CallbackQueryHandler(handle_back_navigation, pattern="^back_"))
     application.add_handler(CallbackQueryHandler(dashboard_callback, pattern="^dashboard_"))
     # Handler per conferme
-    application.add_handler(CallbackQueryHandler(handle_confirmation, pattern="^confirm_"))
     application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
