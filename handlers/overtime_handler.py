@@ -453,8 +453,6 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
             db.close()
             context.user_data['waiting_for_paid_hours'] = False
             
-    finally:
-        db.close()
     except ValueError:
         await update.message.reply_text("❌ Inserisci un numero valido!")
 
@@ -462,4 +460,5 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
         finally:
 
         
-            db.close()
+            db.close()    finally:
+        db.close()
