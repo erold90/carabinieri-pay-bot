@@ -132,6 +132,8 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
     finally:
         db.close()
+    finally:
+        db.close()
 
 async def overtime_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle overtime callbacks"""
@@ -203,6 +205,14 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
         
         db.close()
 
+    
+    finally:
+        db.close()
+    finally:
+
+    
+        db.close()
+
 async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Simulate accumulated overtime payment"""
     user_id = str(update.effective_user.id)
@@ -270,6 +280,14 @@ async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         db.close()
 
+    
+    finally:
+        db.close()
+    finally:
+
+    
+        db.close()
+
 async def paid_hours_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for paid hours input"""
     await ask_paid_hours(update, context)
@@ -333,6 +351,14 @@ async def accumulation_command(update: Update, context: ContextTypes.DEFAULT_TYP
         
         await update.message.reply_text(text, parse_mode='HTML')
         
+        db.close()
+
+    
+    finally:
+        db.close()
+    finally:
+
+    
         db.close()
 
 async def show_overtime_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -445,5 +471,13 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
             db.close()
             context.user_data['waiting_for_paid_hours'] = False
             
+    finally:
+        db.close()
     except ValueError:
         await update.message.reply_text("❌ Inserisci un numero valido!")
+
+        
+        finally:
+
+        
+            db.close()
