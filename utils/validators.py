@@ -79,11 +79,10 @@ def sanitize_text_input(text: str, max_length=100, allow_emoji=False) -> str:
     
     # Rimuovi caratteri di controllo
     text = ''.join(char for char in text if ord(char) >= 32 or char == '\n')
-')
     
     # Rimuovi emoji se non permesse
     if not allow_emoji:
-    text = re.sub(r'[^\w\s\-.,!?€/@#()\'"']', '', text, flags=re.UNICODE)
+        text = re.sub(r"[^\w\s\-\.,!\?€/@#\()\'\"]", "", text, flags=re.UNICODE)
     
     # Trim e limita lunghezza
     text = text.strip()[:max_length]
