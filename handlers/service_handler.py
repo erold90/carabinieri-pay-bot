@@ -66,7 +66,7 @@ async def handle_date_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
             service_date = date(year, month, day)
             
             # Validate date
-            if service_date > date.today() + timedelta(days=7):
+            if service_date > datetime.now().date() + timedelta(days=7):
                 await update.message.reply_text(
                     "❌ Non puoi inserire servizi futuri oltre 7 giorni!",
                     parse_mode='HTML'
@@ -148,8 +148,7 @@ async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TY
         date_str += " (🔴 Festivo)"
     
     # Check user status for that day
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == str(query.from_user.id)).first()
         
         # Check if user was on leave
@@ -171,7 +170,6 @@ async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TY
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-    finally:
         db.close()
     
     return SELECT_TIME
@@ -663,8 +661,7 @@ async def handle_meals(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_service_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show service summary for confirmation"""
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(
             User.telegram_id == str(update.effective_user.id)
         ).first()
@@ -715,7 +712,6 @@ async def show_service_summary(update: Update, context: ContextTypes.DEFAULT_TYP
                 reply_markup=get_confirm_keyboard()
             )
         
-    finally:
         db.close()
     
     return ConversationHandler.END
@@ -815,8 +811,7 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if action == "yes":
         # Save service
-        db = SessionLocal()
-        try:
+        with get_db() as db:
             service = context.user_data['service']
             
             # Verifica dati prima del salvataggio
@@ -855,7 +850,6 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
                 parse_mode='HTML'
             )
             
-        finally:
             db.close()
     
     elif action == "no":

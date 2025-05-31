@@ -20,8 +20,7 @@ async def leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_date = get_current_date()
     current_year = current_date.year
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Calculate remaining leaves
@@ -119,7 +118,6 @@ async def leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
             
-    finally:
         db.close()
 
 async def leave_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -174,8 +172,7 @@ async def handle_leave_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Get user to check availability
     user_id = str(query.from_user.id)
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Check availability
@@ -221,7 +218,6 @@ async def handle_leave_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await query.edit_message_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
     
     return LEAVE_DATES
@@ -320,8 +316,7 @@ async def confirm_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     user_id = str(query.from_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Create leave record
@@ -373,7 +368,6 @@ async def confirm_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Clear context
         context.user_data.clear()
         
-    finally:
         db.close()
 
 async def plan_leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -385,8 +379,7 @@ async def show_leave_planner(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = str(update.effective_user.id)
     current_date = get_current_date()
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         text = "📅 <b>PIANIFICATORE LICENZE INTELLIGENTE</b>\n"
@@ -450,7 +443,6 @@ async def show_leave_planner(update: Update, context: ContextTypes.DEFAULT_TYPE)
             ])
         )
         
-    finally:
         db.close()
 
 async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -458,8 +450,7 @@ async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     current_year = datetime.now().year
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all leaves for current year
@@ -522,7 +513,6 @@ async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
         
-    finally:
         db.close()
 
 async def show_leave_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -559,8 +549,7 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
         user_id = str(update.effective_user.id)
         editing_type = context.user_data.get('editing_leave')
         
-        db = SessionLocal()
-        try:
+        with get_db() as db:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if 'current_leave_total' in editing_type:
@@ -583,7 +572,6 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
                 ])
             )
             
-        finally:
             db.close()
             context.user_data['waiting_for_leave_value'] = False
             context.user_data['editing_leave'] = None
@@ -620,8 +608,7 @@ async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TY
         user_id = str(update.effective_user.id)
         route_name = context.user_data.get('route_name')
         
-        db = SessionLocal()
-        try:
+        with get_db() as db:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if not user.saved_routes:
@@ -639,7 +626,6 @@ async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TY
                 ])
             )
             
-        finally:
             db.close()
             context.user_data['adding_route_km'] = False
             context.user_data['route_name'] = None
@@ -662,8 +648,7 @@ async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAUL
             patron_date = date(datetime.now().year, month, day)
             
             user_id = str(update.effective_user.id)
-            db = SessionLocal()
-            try:
+            with get_db() as db:
                 user = db.query(User).filter(User.telegram_id == user_id).first()
                 user.patron_saint_date = patron_date
                 db.commit()
@@ -676,7 +661,6 @@ async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAUL
                     ])
                 )
                 
-            finally:
                 db.close()
                 context.user_data['setting_patron_saint'] = False
                 
@@ -700,8 +684,7 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                 time_str = f"{hour:02d}:{minute:02d}"
                 
                 user_id = str(update.effective_user.id)
-                db = SessionLocal()
-                try:
+                with get_db() as db:
                     user = db.query(User).filter(User.telegram_id == user_id).first()
                     
                     if not user.notification_settings:
@@ -718,7 +701,6 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                         ])
                     )
                     
-                finally:
                     db.close()
                     context.user_data['setting_reminder_time'] = False
             else:

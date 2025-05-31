@@ -176,10 +176,13 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
         if total_hours >= 12:
             meals_entitled = 2
         
-        if hasattr(service, 'meals_not_consumed') and service.meals_not_consumed > 0:
-            if service.meals_not_consumed == 1:
+        # Calcola pasti non consumati
+        meals_not_consumed = meals_entitled - (service.meals_consumed or 0)
+        
+        if meals_not_consumed > 0:
+            if meals_not_consumed == 1:
                 mission['meal_reimbursement'] = MEAL_RATES['single_meal_net']
-            elif service.meals_not_consumed == 2:
+            elif meals_not_consumed == 2:
                 mission['meal_reimbursement'] = MEAL_RATES['double_meal_net']
     
     return mission

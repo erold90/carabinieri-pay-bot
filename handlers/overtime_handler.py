@@ -20,8 +20,7 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     current_date = get_current_date()
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get current month overtime
@@ -129,7 +128,6 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
             
-    finally:
         db.close()
 
 async def overtime_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -151,8 +149,7 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
     user_id = str(update.effective_user.id)
     current_year = datetime.now().year
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get overtime grouped by month
@@ -200,15 +197,13 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
             ])
         )
         
-    finally:
         db.close()
 
 async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Simulate accumulated overtime payment"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all unpaid overtime
@@ -268,7 +263,6 @@ async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
         
-    finally:
         db.close()
 
 async def paid_hours_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -297,8 +291,7 @@ async def accumulation_command(update: Update, context: ContextTypes.DEFAULT_TYP
     """Show accumulated overtime"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all unpaid overtime grouped by year
@@ -334,7 +327,6 @@ async def accumulation_command(update: Update, context: ContextTypes.DEFAULT_TYP
         
         await update.message.reply_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
 
 async def show_overtime_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -373,8 +365,7 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
         user_id = str(update.effective_user.id)
         current_date = get_current_date()
         
-        db = SessionLocal()
-        try:
+        with get_db() as db:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             # Aggiorna straordinari del mese come pagati
@@ -444,7 +435,6 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
                 reply_markup=keyboard
             )
             
-        finally:
             db.close()
             context.user_data['waiting_for_paid_hours'] = False
             

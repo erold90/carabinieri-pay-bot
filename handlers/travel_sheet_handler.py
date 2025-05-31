@@ -19,8 +19,7 @@ async def travel_sheets_command(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = str(update.effective_user.id)
     current_date = get_current_date()
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all travel sheets
@@ -106,7 +105,6 @@ async def travel_sheets_command(update: Update, context: ContextTypes.DEFAULT_TY
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
             
-    finally:
         db.close()
 
 async def travel_sheet_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -131,8 +129,7 @@ async def ask_payment_details(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Ask which travel sheets were paid"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get unpaid sheets
@@ -174,7 +171,6 @@ async def ask_payment_details(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         context.user_data['waiting_for_fv_selection'] = True
         
-    finally:
         db.close()
 
 async def show_annual_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -182,8 +178,7 @@ async def show_annual_report(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = str(update.effective_user.id)
     current_year = datetime.now().year
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get yearly data
@@ -238,7 +233,6 @@ async def show_annual_report(update: Update, context: ContextTypes.DEFAULT_TYPE)
             reply_markup=get_back_keyboard("back_to_fv")
         )
         
-    finally:
         db.close()
 
 async def back_to_fv(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -270,8 +264,7 @@ async def handle_travel_sheet_selection(update: Update, context: ContextTypes.DE
     text = update.message.text.strip().lower()
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         unpaid_sheets = context.user_data.get('unpaid_sheets', {})
         
@@ -282,7 +275,6 @@ async def handle_travel_sheet_selection(update: Update, context: ContextTypes.DE
             sheets_to_pay = list(unpaid_sheets.values())
         else:
             # Parse numeri selezionati
-            try:
                 numbers = [int(n.strip()) for n in text.split(',')]
                 for num in numbers:
                     if str(num) in unpaid_sheets:
@@ -327,7 +319,6 @@ async def handle_travel_sheet_selection(update: Update, context: ContextTypes.DE
             reply_markup=keyboard
         )
         
-    finally:
         db.close()
         context.user_data['waiting_for_fv_selection'] = False
         context.user_data['unpaid_sheets'] = {}
@@ -340,8 +331,7 @@ async def handle_travel_sheet_search(update: Update, context: ContextTypes.DEFAU
     search_term = update.message.text.strip()
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Cerca per numero FV o destinazione
@@ -378,6 +368,5 @@ async def handle_travel_sheet_search(update: Update, context: ContextTypes.DEFAU
             reply_markup=get_back_keyboard("back_to_fv")
         )
         
-    finally:
         db.close()
         context.user_data['waiting_for_fv_search'] = False

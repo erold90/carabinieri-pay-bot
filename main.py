@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python
 # Deploy forzato: 2025-05-31 00:49:55
 # -*- coding: utf-8 -*-
@@ -79,14 +80,12 @@ from handlers.settings_handler import (
 from handlers.setup_handler import setup_conversation_handler
 
 # Import handler mancanti per input testuali
-from handlers.leave_handler import (
     handle_leave_value_input,
     handle_route_name_input, 
     handle_route_km_input,
     handle_patron_saint_input,
     handle_reminder_time_input
 )
-from handlers.travel_sheet_handler import (
     handle_travel_sheet_selection,
     handle_travel_sheet_search
 )
@@ -97,10 +96,19 @@ from handlers.export_handler import generate_excel_export
 load_dotenv()
 
 # Enable logging
+# Configure logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.INFO if os.getenv('ENV') == 'production' else logging.DEBUG,
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('bot.log', encoding='utf-8')
+    ]
 )
+
+# Riduci verbosità per alcuni moduli
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('telegram.ext._application').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -236,23 +244,23 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log Errors caused by Updates."""
     error = context.error
     
+    # Ignora errori comuni non critici
+    if isinstance(error, (RetryAfter, TimedOut, NetworkError)):
+        logger.debug(f"Errore di rete temporaneo: {error}")
+        return
+    
+    # Log dettagliato per altri errori
+    logger.error(f"Errore in update {update}: {error}", exc_info=True)
+    
+    # Notifica utente se possibile
     try:
-        # Importa qui per evitare import circolari
-        from telegram.error import RetryAfter, TimedOut, NetworkError
-        
-        if isinstance(error, RetryAfter):
-            logger.warning(f"Rate limit: retry dopo {error.retry_after} secondi")
-            return
-        elif isinstance(error, TimedOut):
-            logger.warning("Timeout - normale durante polling")
-            return
-        elif isinstance(error, NetworkError):
-            logger.warning("Errore di rete temporaneo")
-            return
+        if update and update.effective_message:
+            await update.effective_message.reply_text(
+                "❌ Si è verificato un errore. Riprova o usa /start",
+                parse_mode='HTML'
+            )
     except:
         pass
-    
-    logger.warning('Update "%s" caused error "%s"', update, error)
 
 
 # Aggiungi questo handler di test in main.py
@@ -305,6 +313,14 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(message, parse_mode='HTML')
 
+
+# Job per garbage collection periodico
+async def periodic_gc(context: ContextTypes.DEFAULT_TYPE):
+    """Esegue garbage collection periodico"""
+    collected = gc.collect()
+    if collected > 0:
+        logger.debug(f"Garbage collection: {collected} oggetti liberati")
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -333,6 +349,13 @@ def main():
     application = Application.builder().token(
         os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
     ).build()
+
+    # Aggiungi job periodici
+    job_queue = application.job_queue
+    
+    # Garbage collection ogni 30 minuti
+    job_queue.run_repeating(periodic_gc, interval=1800, first=600)
+    
     
 
     

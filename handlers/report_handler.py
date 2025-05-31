@@ -29,8 +29,7 @@ async def show_day_report(update: Update, context: ContextTypes.DEFAULT_TYPE, re
     """Show report for a specific day"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get service for the day
@@ -82,7 +81,6 @@ async def show_day_report(update: Update, context: ContextTypes.DEFAULT_TYPE, re
         
         await update.message.reply_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
 
 async def week_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -109,8 +107,7 @@ async def show_period_report(update: Update, context: ContextTypes.DEFAULT_TYPE,
     """Show report for a period"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get services in period
@@ -151,7 +148,6 @@ async def show_period_report(update: Update, context: ContextTypes.DEFAULT_TYPE,
         
         await update.message.reply_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
 
 async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAULT_TYPE, 
@@ -159,8 +155,7 @@ async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAU
     """Show detailed monthly report"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get month data
@@ -305,15 +300,13 @@ async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAU
         
         await update.message.reply_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
 
 async def show_year_report(update: Update, context: ContextTypes.DEFAULT_TYPE, year: int):
     """Show yearly report"""
     user_id = str(update.effective_user.id)
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get year totals
@@ -366,7 +359,6 @@ async def show_year_report(update: Update, context: ContextTypes.DEFAULT_TYPE, y
         
         await update.message.reply_text(text, parse_mode='HTML')
         
-    finally:
         db.close()
 
 async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -378,8 +370,7 @@ async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
     
-    db = SessionLocal()
-    try:
+    with get_db() as db:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get current year data
@@ -438,7 +429,6 @@ async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     max_length = 0
                     column_letter = column[0].column_letter
                     for cell in column:
-                        try:
                             if len(str(cell.value)) > max_length:
                                 max_length = len(str(cell.value))
                         except:
@@ -455,5 +445,4 @@ async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             caption=f"📊 Export dati {current_year}\n\nContiene:\n- Dettaglio servizi\n- Riepilogo mensile\n- Statistiche"
         )
         
-    finally:
         db.close()
