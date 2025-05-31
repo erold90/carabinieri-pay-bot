@@ -15,7 +15,8 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show settings menu"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         if not user:
@@ -68,6 +69,7 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
             
+    finally:
         db.close()
 
 async def settings_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -101,7 +103,8 @@ async def show_personal_settings(update: Update, context: ContextTypes.DEFAULT_T
     """Show personal data settings"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         text = "👤 <b>DATI PERSONALI</b>\n\n"
@@ -126,6 +129,7 @@ async def show_personal_settings(update: Update, context: ContextTypes.DEFAULT_T
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
+    finally:
         db.close()
 
 async def show_rank_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -155,7 +159,6 @@ async def show_irpef_selection(update: Update, context: ContextTypes.DEFAULT_TYP
         reply_markup=get_irpef_keyboard()
     )
 
-
 async def update_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Update user rank with DB verification"""
     query = update.callback_query
@@ -165,11 +168,12 @@ async def update_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
     selected_rank = RANKS[rank_index]
     
     user_id = str(query.from_user.id)
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         user.rank = selected_rank
         
-        # Update parameter based on rank (esempio di parametri)
+        # Update parameter based on rank
         rank_parameters = {
             'Carabiniere': 101.25,
             'Carabiniere Scelto': 102.5,
@@ -191,24 +195,17 @@ async def update_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user.parameter = rank_parameters[selected_rank]
         
         db.commit()
-        
-        # Verifica che sia stato salvato
         db.refresh(user)
-        if user.rank == selected_rank:
-            await query.edit_message_text(
-                f"✅ Grado aggiornato: <b>{selected_rank}</b>\n"
-                f"Parametro: <b>{user.parameter}</b>\n\n"
-                "✅ Modifiche salvate nel database!",
-                parse_mode='HTML',
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
-                ])
-            )
-        else:
-            await query.edit_message_text(
-                "❌ Errore nel salvataggio. Riprova.",
-                parse_mode='HTML'
-            )
+        
+        await query.edit_message_text(
+            f"✅ Grado aggiornato: <b>{selected_rank}</b>\n"
+            f"Parametro: <b>{user.parameter}</b>\n\n"
+            "✅ Modifiche salvate nel database!",
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
+            ])
+        )
         
     except Exception as e:
         print(f"[ERROR] Aggiornamento grado: {e}")
@@ -216,6 +213,7 @@ async def update_rank(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❌ Errore nel database. Riprova più tardi.",
             parse_mode='HTML'
         )
+    finally:
         db.close()
 
 async def update_irpef(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -226,27 +224,21 @@ async def update_irpef(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rate = int(query.data.replace("irpef_", ""))
     
     user_id = str(query.from_user.id)
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         user.irpef_rate = rate / 100
         db.commit()
-        
-        # Verifica
         db.refresh(user)
-        if user.irpef_rate == rate / 100:
-            await query.edit_message_text(
-                f"✅ Aliquota IRPEF aggiornata: <b>{rate}%</b>\n\n"
-                "✅ Modifiche salvate nel database!",
-                parse_mode='HTML',
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
-                ])
-            )
-        else:
-            await query.edit_message_text(
-                "❌ Errore nel salvataggio. Riprova.",
-                parse_mode='HTML'
-            )
+        
+        await query.edit_message_text(
+            f"✅ Aliquota IRPEF aggiornata: <b>{rate}%</b>\n\n"
+            "✅ Modifiche salvate nel database!",
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
+            ])
+        )
         
     except Exception as e:
         print(f"[ERROR] Aggiornamento IRPEF: {e}")
@@ -254,6 +246,7 @@ async def update_irpef(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❌ Errore nel database. Riprova più tardi.",
             parse_mode='HTML'
         )
+    finally:
         db.close()
 
 async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -287,27 +280,20 @@ async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get('waiting_for_command'):
         command_name = update.message.text.strip()
         
-        with get_db() as db:
+        db = SessionLocal()
+        try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             user.command = command_name
             db.commit()
             
-            # Verifica
-            db.refresh(user)
-            if user.command == command_name:
-                await update.message.reply_text(
-                    f"✅ Comando aggiornato: <b>{command_name}</b>\n\n"
-                    "✅ Modifiche salvate nel database!",
-                    parse_mode='HTML',
-                    reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
-                    ])
-                )
-            else:
-                await update.message.reply_text(
-                    "❌ Errore nel salvataggio. Riprova.",
-                    parse_mode='HTML'
-                )
+            await update.message.reply_text(
+                f"✅ Comando aggiornato: <b>{command_name}</b>\n\n"
+                "✅ Modifiche salvate nel database!",
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
+                ])
+            )
             
             context.user_data['waiting_for_command'] = False
             
@@ -317,33 +303,27 @@ async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "❌ Errore nel database. Riprova più tardi.",
                 parse_mode='HTML'
             )
+        finally:
             db.close()
             
     elif context.user_data.get('waiting_for_base_hours'):
         try:
             hours = int(update.message.text.strip())
             if 1 <= hours <= 24:
-                with get_db() as db:
+                db = SessionLocal()
+                try:
                     user = db.query(User).filter(User.telegram_id == user_id).first()
                     user.base_shift_hours = hours
                     db.commit()
                     
-                    # Verifica
-                    db.refresh(user)
-                    if user.base_shift_hours == hours:
-                        await update.message.reply_text(
-                            f"✅ Turno base aggiornato: <b>{hours} ore</b>\n\n"
-                            "✅ Modifiche salvate nel database!",
-                            parse_mode='HTML',
-                            reply_markup=InlineKeyboardMarkup([
-                                [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
-                            ])
-                        )
-                    else:
-                        await update.message.reply_text(
-                            "❌ Errore nel salvataggio. Riprova.",
-                            parse_mode='HTML'
-                        )
+                    await update.message.reply_text(
+                        f"✅ Turno base aggiornato: <b>{hours} ore</b>\n\n"
+                        "✅ Modifiche salvate nel database!",
+                        parse_mode='HTML',
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("⬅️ Torna alle impostazioni", callback_data="settings_personal")]
+                        ])
+                    )
                     
                     context.user_data['waiting_for_base_hours'] = False
                     
@@ -353,18 +333,19 @@ async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "❌ Errore nel database. Riprova più tardi.",
                         parse_mode='HTML'
                     )
+                finally:
                     db.close()
             else:
                 await update.message.reply_text("❌ Inserisci un numero tra 1 e 24")
         except ValueError:
             await update.message.reply_text("❌ Inserisci un numero valido")
 
-
 async def show_leave_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show leave settings"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         text = "🏖️ <b>CONFIGURAZIONE LICENZE</b>\n\n"
@@ -392,13 +373,15 @@ async def show_leave_settings(update: Update, context: ContextTypes.DEFAULT_TYPE
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
+    finally:
         db.close()
 
 async def show_location_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show location settings"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         text = "📍 <b>SEDE E PERCORSI SALVATI</b>\n\n"
@@ -435,13 +418,15 @@ async def show_location_settings(update: Update, context: ContextTypes.DEFAULT_T
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
+    finally:
         db.close()
 
 async def show_notification_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show notification settings"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Impostazioni notifiche (default se non esistono)
@@ -491,6 +476,7 @@ async def show_notification_settings(update: Update, context: ContextTypes.DEFAU
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         
+    finally:
         db.close()
 
 async def toggle_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -501,7 +487,8 @@ async def toggle_notification(update: Update, context: ContextTypes.DEFAULT_TYPE
     setting = query.data.replace("toggle_", "")
     user_id = str(query.from_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get current settings
@@ -534,10 +521,10 @@ async def toggle_notification(update: Update, context: ContextTypes.DEFAULT_TYPE
             # Refresh view
             await show_notification_settings(update, context)
         
+    finally:
         db.close()
 
-
-# Handlers di supporto per settings
+# Handler di supporto per settings
 async def handle_leave_edit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle leave editing"""
     query = update.callback_query
