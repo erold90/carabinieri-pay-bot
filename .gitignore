@@ -33,3 +33,13 @@ Thumbs.db
 
 # Railway
 railway.json
+# macOS
+# Python bytecode
+*.pyc
+# Database fallback (locale)
+fallback.db
+# Railway / Heroku / altri
+runtime.txt
+.deploy_check
+# Cartelle di test / output
+tests/__pycache__/
