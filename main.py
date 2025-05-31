@@ -230,6 +230,30 @@ async def handle_all_text_inputs(update: Update, context: ContextTypes.DEFAULT_T
     elif user_data.get('waiting_for_base_hours'):
         return await handle_text_input(update, context)
 
+
+# Error handler
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log Errors caused by Updates."""
+    error = context.error
+    
+    try:
+        # Importa qui per evitare import circolari
+        from telegram.error import RetryAfter, TimedOut, NetworkError
+        
+        if isinstance(error, RetryAfter):
+            logger.warning(f"Rate limit: retry dopo {error.retry_after} secondi")
+            return
+        elif isinstance(error, TimedOut):
+            logger.warning("Timeout - normale durante polling")
+            return
+        elif isinstance(error, NetworkError):
+            logger.warning("Errore di rete temporaneo")
+            return
+    except:
+        pass
+    
+    logger.warning('Update "%s" caused error "%s"', update, error)
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -399,22 +423,6 @@ def main():
 
     
     # Error handler
-    async def error_handler(update: Update, context):
-        """Log Errors caused by Updates."""
-    error = context.error
-    
-    if isinstance(error, RetryAfter):
-        logger.warning(f"Rate limit: retry dopo {error.retry_after} secondi")
-        return
-    elif isinstance(error, TimedOut):
-        logger.warning("Timeout - normale durante polling")
-        return
-    elif isinstance(error, NetworkError):
-        logger.warning("Errore di rete temporaneo")
-        return
-    
-    logger.error('Update "%s" caused error "%s"', update, error)
-
     application.add_error_handler(error_handler)
     
     # Start the bot
