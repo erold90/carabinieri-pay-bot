@@ -112,7 +112,7 @@ RANK_CATEGORIES = {
     'Colonnello': 'dirigente_base',
     'Generale di Brigata': 'dirigente_base',
     'Generale di Divisione': 'dirigente_divisione',
-    'Generale di Corpo d'Armata': 'dirigente_ca'
+    "Generale di Corpo d'Armata": 'dirigente_ca'
 }
 
 # Ranks list (aggiornata con gradi dirigenti)
@@ -139,7 +139,7 @@ RANKS = [
     'Colonnello',
     'Generale di Brigata',
     'Generale di Divisione',
-    'Generale di Corpo d'Armata'
+    "Generale di Corpo d'Armata"
 ]
 
 # Forfeit rates (NET)
