@@ -400,7 +400,7 @@ def main():
     
     # Error handler
     async def error_handler(update: Update, context):
-    """Log Errors caused by Updates."""
+        """Log Errors caused by Updates."""
     error = context.error
     
     if isinstance(error, RetryAfter):
