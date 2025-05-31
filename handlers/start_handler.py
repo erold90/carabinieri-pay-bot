@@ -21,63 +21,68 @@ from services.calculation_service import calculate_month_totals
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
-    logger.info("Start command received")
-    # Gestisci sia messaggi che callback query
-    if update.message:
-        user = update.message.from_user
-        chat_id = update.message.chat_id
-        reply_func = update.message.reply_text
-    elif update.callback_query:
-        user = update.callback_query.from_user
-        chat_id = update.callback_query.message.chat_id
-        reply_func = update.callback_query.message.reply_text
-        await update.callback_query.answer()
-    else:
-        return
-    
-    # Get or create user
-    db = SessionLocal()
     try:
-        db_user = db.query(User).filter(User.telegram_id == str(user.id)).first()
-        
-        if not db_user:
-            # Create new user
-            db_user = User(
-                telegram_id=str(user.id),
-                chat_id=str(chat_id),
-                username=user.username if user.username else "",
-                first_name=user.first_name if user.first_name else "",
-                last_name=user.last_name if user.last_name else ""
-            ,
-                irpef_rate=0.27,
-                base_shift_hours=6,
-                parameter=108.5,
-                current_year_leave=32,
-                current_year_leave_used=0,
-                previous_year_leave=0)
-            db.add(db_user)
-            db.commit()
-            
-            # Send welcome message with setup
-            await send_welcome_setup(update, context, db_user)
+        logger.info("Start command received")
+        # Gestisci sia messaggi che callback query
+        if update.message:
+            user = update.message.from_user
+            chat_id = update.message.chat_id
+            reply_func = update.message.reply_text
+        elif update.callback_query:
+            user = update.callback_query.from_user
+            chat_id = update.callback_query.message.chat_id
+            reply_func = update.callback_query.message.reply_text
+            await update.callback_query.answer()
         else:
-            # Update chat_id if changed
-            if db_user.chat_id != str(chat_id):
-                db_user.chat_id = str(chat_id)
+            return
+    
+        # Get or create user
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.telegram_id == str(user.id)).first()
+        
+            if not db_user:
+                # Create new user
+                db_user = User(
+                    telegram_id=str(user.id),
+                    chat_id=str(chat_id),
+                    username=user.username if user.username else "",
+                    first_name=user.first_name if user.first_name else "",
+                    last_name=user.last_name if user.last_name else ""
+                ,
+                    irpef_rate=0.27,
+                    base_shift_hours=6,
+                    parameter=108.5,
+                    current_year_leave=32,
+                    current_year_leave_used=0,
+                    previous_year_leave=0)
+                db.add(db_user)
                 db.commit()
             
-            # Send dashboard
-            await send_dashboard(update, context, db_user, db)
-    except Exception as e:
-        print(f"Errore in start_command: {e}")
-        import traceback
-        traceback.print_exc()
+                # Send welcome message with setup
+                await send_welcome_setup(update, context, db_user)
+            else:
+                # Update chat_id if changed
+                if db_user.chat_id != str(chat_id):
+                    db_user.chat_id = str(chat_id)
+                    db.commit()
+            
+                # Send dashboard
+                await send_dashboard(update, context, db_user, db)
+        except Exception as e:
+            print(f"Errore in start_command: {e}")
+            import traceback
+            traceback.print_exc()
         
-        error_message = "❌ Si è verificato un errore. Riprova con /start"
-        await reply_func(error_message, parse_mode='HTML')
-    finally:
-        db.close()
+            error_message = "❌ Si è verificato un errore. Riprova con /start"
+            await reply_func(error_message, parse_mode='HTML')
+        finally:
+            db.close()
 
+    except Exception as e:
+        logger.error(f"Errore in start_command: {e}", exc_info=True)
+        if update.message:
+            await update.message.reply_text("❌ Si è verificato un errore. Riprova con /start")
 async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User):
     """Send welcome message for new users"""
     logger.info("🚀 START COMMAND CHIAMATO!")
