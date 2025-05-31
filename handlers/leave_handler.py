@@ -565,7 +565,7 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
         editing_type = context.user_data.get('editing_leave')
         
         db = SessionLocal()
-    try:
+        try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if 'current_leave_total' in editing_type:
@@ -627,7 +627,7 @@ async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TY
         route_name = context.user_data.get('route_name')
         
         db = SessionLocal()
-    try:
+        try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if not user.saved_routes:
@@ -668,7 +668,7 @@ async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAUL
             
             user_id = str(update.effective_user.id)
             db = SessionLocal()
-    try:
+            try:
                 user = db.query(User).filter(User.telegram_id == user_id).first()
                 user.patron_saint_date = patron_date
                 db.commit()
@@ -705,7 +705,7 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                 
                 user_id = str(update.effective_user.id)
                 db = SessionLocal()
-    try:
+                try:
                     user = db.query(User).filter(User.telegram_id == user_id).first()
                     
                     if not user.notification_settings:
@@ -724,6 +724,8 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                     
                     db.close()
                     context.user_data['setting_reminder_time'] = False
+                finally:
+                    db.close()
             else:
                 raise ValueError("Orario non valido")
                 
