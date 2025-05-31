@@ -390,7 +390,6 @@ async def debug_middleware(update, context):
 async def main():
     """Start the bot."""
     # Initialize database
-    # Initialize database con gestione errori
     try:
         if init_db():
             logger.info("✅ Database inizializzato")
@@ -401,9 +400,6 @@ async def main():
         logger.warning("Il bot continuerà senza database")
     
     # Create the Application
-    
-    
-    # Debug: verifica token
     token = os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
     if not token:
         logger.error("❌ BOT TOKEN NON TROVATO!")
@@ -412,54 +408,24 @@ async def main():
     else:
         logger.info(f"✅ Token trovato: {token[:10]}...{token[-5:]}")
     
-    application = Application.builder().token(
-        os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
-    ).build()
+    application = Application.builder().token(token).build()
 
     # Aggiungi job periodici (se disponibile)
     if application.job_queue:
         job_queue = application.job_queue
-        
-        # Garbage collection ogni 30 minuti
         job_queue.run_repeating(periodic_gc, interval=1800, first=600)
         logger.info("✅ Job Queue configurato")
     else:
-        logger.warning("⚠️ Job Queue non disponibile - garbage collection disabilitato")
+        logger.warning("⚠️ Job Queue non disponibile")
     
-    
-
-    
-    # Middleware per pulizia automatica messaggi
-    # DEVE essere il PRIMO handler con priority massima
-
-    # DEBUG: Log TUTTI gli update ricevuti
-# Debug handler for unhandled callbacks
-    async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Debug handler for unhandled callbacks"""
-        query = update.callback_query
-        await query.answer()
-        logger.warning(f"Callback non gestito: {query.data}")
-    
-    if query.data == "confirm_yes":
-        from handlers.service_handler import handle_confirmation
-        return await handle_confirmation(update, context)
-    
-    # Default per altri callback non gestiti
-    await query.edit_message_text(
-        f"⚠️ Funzione in sviluppo: {query.data}\n\nTorna al menu con /start",
-        parse_mode='HTML'
-    )
-    
-    # Add at the end to catch unhandled callbacks
-
-    # Command handlers - start DEVE essere il primo!
     # Logger per debug - PRIMO handler
     application.add_handler(MessageHandler(filters.ALL, log_all_messages), group=-10)
     logger.info("📝 Message logger aggiunto")
 
-        # Logging handler per debug
+    # Logging handler per debug
     application.add_handler(MessageHandler(filters.ALL, log_update), group=-10)
     
+    # Command handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("hello", hello_command))
     application.add_handler(CommandHandler("ping", ping_command))
@@ -475,61 +441,6 @@ async def main():
     application.add_handler(CommandHandler("ieri", yesterday_command))
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("anno", year_command))
-    
-    # Comando test per debug
-    async def test_save_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Test diretto salvataggio"""
-        from database.connection import SessionLocal
-        from database.models import Service, ServiceType, User
-        from services.calculation_service import calculate_service_total
-        from datetime import datetime, date
-        
-        user_id = str(update.effective_user.id)
-        
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.telegram_id == user_id).first()
-            if not user:
-                await update.message.reply_text("❌ Utente non trovato!")
-                return
-            
-            # Crea servizio test
-            service = Service(
-                user_id=user.id,
-                date=date.today(),
-                start_time=datetime.now().replace(hour=9, minute=0),
-                end_time=datetime.now().replace(hour=15, minute=0),
-                total_hours=6.0,
-                service_type=ServiceType.LOCAL,
-                is_holiday=False,
-                is_super_holiday=False
-            )
-            
-            # Calcola
-            calc = calculate_service_total(db, user, service)
-            
-            # Salva
-            db.add(service)
-            db.commit()
-            
-            # Verifica
-            saved = db.query(Service).filter(Service.id == service.id).first()
-            if saved:
-                text = f"✅ TEST RIUSCITO!\n\n"
-                text += f"Servizio salvato con ID: {saved.id}\n"
-                text += f"Data: {saved.date}\n"
-                text += f"Ore: {saved.total_hours}\n"
-                text += f"Totale: €{saved.total_amount:.2f}"
-            else:
-                text = "❌ Errore: servizio non trovato dopo salvataggio!"
-            
-            await update.message.reply_text(text, parse_mode='HTML')
-            
-        except Exception as e:
-            await update.message.reply_text(f"❌ Errore: {str(e)}", parse_mode='HTML')
-        finally:
-            db.close()
-    
     application.add_handler(CommandHandler("test", test_save_command))
     application.add_handler(CommandHandler("export", export_command))
     application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
@@ -537,66 +448,49 @@ async def main():
     application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
     application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
     application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
-    # CRITICAL: Conversation handlers - DEVONO essere prima dei callback generici!
+    application.add_handler(CommandHandler("riposi", rest_command))
+    
+    # Conversation handlers
     application.add_handler(service_conversation_handler)
     application.add_handler(setup_conversation_handler)
     
-    # Handler per callback specifici delle licenze
+    # Callback handlers specifici
     application.add_handler(CallbackQueryHandler(handle_leave_edit, pattern="^edit_(current_leave_total|current_leave_used|previous_leave)$"))
-    
-    # Handler per percorsi salvati
     application.add_handler(CallbackQueryHandler(handle_route_action, pattern="^(add|remove)_route$"))
     application.add_handler(CallbackQueryHandler(handle_patron_saint, pattern="^set_patron_saint$"))
     application.add_handler(CallbackQueryHandler(handle_reminder_time, pattern="^change_reminder_time$"))
-    
-    # Handler per selezione pasti
     application.add_handler(CallbackQueryHandler(handle_meal_selection, pattern="^meal_(lunch|dinner)$"))
     application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meal_confirm$"))
-    
-    # Handler per tipi missione
     application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
-    
-    # Handler per navigazione settings
     application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_[0-9]+$"))
     application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_[0-9]+$"))
-    
-    # Handler per navigazione back
     application.add_handler(CallbackQueryHandler(handle_back_navigation, pattern="^back_"))
-    
-    # Handler per dashboard callbacks
     application.add_handler(CallbackQueryHandler(dashboard_callback, pattern="^dashboard_"))
-    
-    # Handler per altri callback specifici
     application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_"))
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
     application.add_handler(CallbackQueryHandler(rest_callback, pattern="^rest_"))
-    
-    # Handler per toggle notifiche
     application.add_handler(CallbackQueryHandler(toggle_notification, pattern="^toggle_"))
     
-    # Comandi aggiuntivi
-    
-    # Handler per input testuali - DEVE essere uno degli ultimi!
+    # Handler per input testuali
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_all_text_inputs))
-    application.add_handler(CommandHandler("riposi", rest_command))
-
-    # Error handler
-    # Catch-all per callback non gestiti - DEVE essere ultimo!
+    
+    # Catch-all per callback non gestiti
     application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
+    
+    # Error handler
     application.add_error_handler(error_handler)
     
-    # Start the bot - VERSIONE CORRETTA PER RAILWAY
+    # Start the bot
     log_info("Avvio CarabinieriPayBot...")
     
-    # IMPORTANTE: usa run_polling() che gestisce tutto internamente
+    # Run polling
     application.run_polling(
         drop_pending_updates=True,
-        allowed_updates=None,  # Ricevi TUTTI gli update
-        close_loop=False  # Non chiudere il loop
+        allowed_updates=None,
+        close_loop=False
     )
-
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
