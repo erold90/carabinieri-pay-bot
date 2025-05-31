@@ -683,8 +683,10 @@ async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAUL
                     ])
                 )
                 
-                db.close()
                 context.user_data['setting_patron_saint'] = False
+                
+            finally:
+                db.close()
                 
     except (ValueError, IndexError):
         await update.message.reply_text(
@@ -724,8 +726,8 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                         ])
                     )
                     
-                    db.close()
                     context.user_data['setting_reminder_time'] = False
+                    
                 finally:
                     db.close()
             else:
@@ -735,3 +737,5 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
         await update.message.reply_text(
             "❌ Formato non valido! Usa HH:MM (es: 09:00)"
         )
+
+
