@@ -323,7 +323,6 @@ def main():
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
-    application.add_handler(CallbackQueryHandler(handle_confirmation, pattern="^confirm_"))
     application.add_handler(CallbackQueryHandler(rest_callback, pattern="^rest_"))
     
     # Handler per toggle notifiche
@@ -370,39 +369,14 @@ def main():
         callback_data = query.data
         logger.warning(f"Callback non implementato: {callback_data}")
         
-        # Routing di emergenza
-        if "back_to_menu" in callback_data:
-            await start_command(update, context)
-        elif "setup_start" in callback_data:
-            await query.answer("Usa /impostazioni per configurare il profilo", show_alert=True)
-        elif callback_data.startswith("confirm_"):
-            # Routing per conferma servizio
-            from handlers.service_handler import handle_confirmation
-            await handle_confirmation(update, context)
-        else:
-            await query.answer("Funzione in sviluppo", show_alert=True)
-    
-    application.add_handler(CallbackQueryHandler(handle_unknown_callback))
-
-    # Handler per callback non gestiti - DEVE essere l'ultimo!
-    async def handle_unknown_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-        
-        callback_data = query.data
-        logger.warning(f"Callback non implementato: {callback_data}")
-        
-        if "back_to_menu" in callback_data:
+        # Per i callback confirm_, mostra messaggio temporaneo
+        if callback_data.startswith("confirm_"):
+            await query.answer("⚠️ Usa i bottoni durante la registrazione del servizio", show_alert=True)
+        elif "back_to_menu" in callback_data:
             await start_command(update, context)
         elif "setup_start" in callback_data:
             await query.answer("Usa /impostazioni per configurare il profilo", show_alert=True)
         else:
             await query.answer("Funzione in sviluppo", show_alert=True)
-    
-    application.add_handler(CallbackQueryHandler(handle_unknown_callback))
-
-    
-    application.run_polling()
-
 if __name__ == '__main__':
     main()
