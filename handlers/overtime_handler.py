@@ -160,8 +160,8 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
             extract('month', Overtime.date).label('month'),
             func.sum(Overtime.hours).label('total_hours'),
             func.sum(Overtime.amount).label('total_amount'),
-            func.sum(func.case([(Overtime.is_paid == True, Overtime.hours)], else_=0)).label('paid_hours'),
-            func.sum(func.case([(Overtime.is_paid == False, Overtime.hours)], else_=0)).label('unpaid_hours')
+            func.sum(func.case([(Overtime.is_paid == True, Overtime.hours)])).label('paid_hours'),
+            func.sum(func.case([(Overtime.is_paid == False, Overtime.hours)])).label('unpaid_hours')
         ).filter(
             Overtime.user_id == user.id,
             extract('year', Overtime.date) == current_year
