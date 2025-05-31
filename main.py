@@ -279,7 +279,7 @@ def main():
     async def test_save_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Test diretto salvataggio"""
         from database.connection import SessionLocal
-        from database.models import Service, ServiceType
+        from database.models import Service, ServiceType, User
         from services.calculation_service import calculate_service_total
         from datetime import datetime, date
         
@@ -336,15 +336,6 @@ def main():
     application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
     application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
     application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
-    application.add_handler(CommandHandler("ieri", yesterday_command))
-    application.add_handler(CommandHandler("settimana", week_command))
-    application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("export", export_command))
-    application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
-    application.add_handler(CommandHandler("accumulo", accumulation_command))
-    application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
-    application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
-    application.add_handler(CommandHandler("fv_pagamento", register_payment_command))
     # CRITICAL: Conversation handlers - DEVONO essere prima dei callback generici!
     application.add_handler(service_conversation_handler)
     application.add_handler(setup_conversation_handler)
@@ -385,7 +376,6 @@ def main():
     application.add_handler(CallbackQueryHandler(toggle_notification, pattern="^toggle_"))
     
     # Comandi aggiuntivi
-    application.add_handler(CommandHandler("export", generate_excel_export))
     
     # Handler per input testuali - DEVE essere uno degli ultimi!
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_all_text_inputs))
