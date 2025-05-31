@@ -121,6 +121,8 @@ async def leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         db.close()
 
+    finally:
+        db.close()
 async def leave_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle leave callbacks"""
     query = update.callback_query
@@ -222,6 +224,8 @@ async def handle_leave_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         db.close()
     
+    finally:
+        db.close()
     return LEAVE_DATES
 
 async def handle_leave_dates(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -373,6 +377,8 @@ async def confirm_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         db.close()
 
+    finally:
+        db.close()
 async def plan_leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show leave planner"""
     await show_leave_planner(update, context)
@@ -449,6 +455,8 @@ async def show_leave_planner(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
         db.close()
 
+    finally:
+        db.close()
 async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show annual leave report"""
     user_id = str(update.effective_user.id)
@@ -520,6 +528,8 @@ async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         db.close()
 
+    finally:
+        db.close()
 async def show_leave_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show leave configuration"""
     # TODO: Implement leave configuration

@@ -84,6 +84,8 @@ async def show_day_report(update: Update, context: ContextTypes.DEFAULT_TYPE, re
         
         db.close()
 
+    finally:
+        db.close()
 async def week_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show weekly report"""
     current_date = get_current_date()
@@ -152,6 +154,8 @@ async def show_period_report(update: Update, context: ContextTypes.DEFAULT_TYPE,
         
         db.close()
 
+    finally:
+        db.close()
 async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAULT_TYPE, 
                                    month: int, year: int):
     """Show detailed monthly report"""
@@ -305,6 +309,8 @@ async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAU
         
         db.close()
 
+    finally:
+        db.close()
 async def show_year_report(update: Update, context: ContextTypes.DEFAULT_TYPE, year: int):
     """Show yearly report"""
     user_id = str(update.effective_user.id)
@@ -365,6 +371,8 @@ async def show_year_report(update: Update, context: ContextTypes.DEFAULT_TYPE, y
         
         db.close()
 
+    finally:
+        db.close()
 async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Export data to Excel"""
     user_id = str(update.effective_user.id)
@@ -450,4 +458,6 @@ async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             caption=f"📊 Export dati {current_year}\n\nContiene:\n- Dettaglio servizi\n- Riepilogo mensile\n- Statistiche"
         )
         
+        db.close()
+    finally:
         db.close()
