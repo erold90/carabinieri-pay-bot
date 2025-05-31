@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from datetime import datetime, date, timedelta
 from sqlalchemy import extract, func, and_
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, Leave, LeaveType
 
 from utils.clean_chat import register_bot_message, delete_message_after_delay
@@ -20,7 +20,8 @@ async def leave_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_date = get_current_date()
     current_year = current_date.year
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Calculate remaining leaves
@@ -172,7 +173,8 @@ async def handle_leave_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Get user to check availability
     user_id = str(query.from_user.id)
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Check availability
@@ -316,7 +318,8 @@ async def confirm_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     user_id = str(query.from_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Create leave record
@@ -379,7 +382,8 @@ async def show_leave_planner(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = str(update.effective_user.id)
     current_date = get_current_date()
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         text = "📅 <b>PIANIFICATORE LICENZE INTELLIGENTE</b>\n"
@@ -450,7 +454,8 @@ async def show_leave_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     current_year = datetime.now().year
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all leaves for current year
@@ -549,7 +554,8 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
         user_id = str(update.effective_user.id)
         editing_type = context.user_data.get('editing_leave')
         
-        with get_db() as db:
+        db = SessionLocal()
+    try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if 'current_leave_total' in editing_type:
@@ -608,7 +614,8 @@ async def handle_route_km_input(update: Update, context: ContextTypes.DEFAULT_TY
         user_id = str(update.effective_user.id)
         route_name = context.user_data.get('route_name')
         
-        with get_db() as db:
+        db = SessionLocal()
+    try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if not user.saved_routes:
@@ -648,7 +655,8 @@ async def handle_patron_saint_input(update: Update, context: ContextTypes.DEFAUL
             patron_date = date(datetime.now().year, month, day)
             
             user_id = str(update.effective_user.id)
-            with get_db() as db:
+            db = SessionLocal()
+    try:
                 user = db.query(User).filter(User.telegram_id == user_id).first()
                 user.patron_saint_date = patron_date
                 db.commit()
@@ -684,7 +692,8 @@ async def handle_reminder_time_input(update: Update, context: ContextTypes.DEFAU
                 time_str = f"{hour:02d}:{minute:02d}"
                 
                 user_id = str(update.effective_user.id)
-                with get_db() as db:
+                db = SessionLocal()
+    try:
                     user = db.query(User).filter(User.telegram_id == user_id).first()
                     
                     if not user.notification_settings:

@@ -592,6 +592,8 @@ def main():
     application.add_handler(CommandHandler("riposi", rest_command))
 
     # Error handler
+    # Catch-all per callback non gestiti - DEVE essere ultimo!
+    application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
     application.add_error_handler(error_handler)
     
     # Start the bot - VERSIONE CORRETTA PER RAILWAY

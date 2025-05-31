@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from datetime import datetime, date, timedelta
 from sqlalchemy import extract, func, and_, or_
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, Service, Rest, RestType
 from config.settings import get_current_date
 from utils.formatters import format_date, format_currency

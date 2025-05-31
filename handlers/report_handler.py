@@ -8,7 +8,7 @@ from sqlalchemy import extract, func
 import io
 import pandas as pd
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, Service, Overtime, TravelSheet, Leave
 
 from utils.clean_chat import register_bot_message, delete_message_after_delay
@@ -29,7 +29,8 @@ async def show_day_report(update: Update, context: ContextTypes.DEFAULT_TYPE, re
     """Show report for a specific day"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get service for the day
@@ -107,7 +108,8 @@ async def show_period_report(update: Update, context: ContextTypes.DEFAULT_TYPE,
     """Show report for a period"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get services in period
@@ -155,7 +157,8 @@ async def show_month_report_detailed(update: Update, context: ContextTypes.DEFAU
     """Show detailed monthly report"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get month data
@@ -306,7 +309,8 @@ async def show_year_report(update: Update, context: ContextTypes.DEFAULT_TYPE, y
     """Show yearly report"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get year totals
@@ -370,7 +374,8 @@ async def export_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get current year data

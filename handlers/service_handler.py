@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Call
 from datetime import datetime, timedelta, time
 from sqlalchemy.orm import Session
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, Service, ServiceType, TravelSheet
 from config.settings import (
     SELECT_DATE, SELECT_TIME, SELECT_SERVICE_TYPE, SERVICE_DETAILS,

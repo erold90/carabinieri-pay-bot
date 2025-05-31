@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from datetime import datetime, date
 from sqlalchemy import extract, func
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, Overtime, OvertimeType
 
 from utils.clean_chat import register_bot_message, delete_message_after_delay
@@ -20,7 +20,8 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     current_date = get_current_date()
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get current month overtime
@@ -149,7 +150,8 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
     user_id = str(update.effective_user.id)
     current_year = datetime.now().year
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get overtime grouped by month
@@ -203,7 +205,8 @@ async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Simulate accumulated overtime payment"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all unpaid overtime
@@ -291,7 +294,8 @@ async def accumulation_command(update: Update, context: ContextTypes.DEFAULT_TYP
     """Show accumulated overtime"""
     user_id = str(update.effective_user.id)
     
-    with get_db() as db:
+    db = SessionLocal()
+    try:
         user = db.query(User).filter(User.telegram_id == user_id).first()
         
         # Get all unpaid overtime grouped by year
@@ -365,7 +369,8 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
         user_id = str(update.effective_user.id)
         current_date = get_current_date()
         
-        with get_db() as db:
+        db = SessionLocal()
+    try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             # Aggiorna straordinari del mese come pagati

@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from datetime import datetime, timedelta
 from sqlalchemy import extract, func, and_, or_
 
-from database.connection import SessionLocal
+from database.connection import SessionLocal, get_db
 from database.models import User, TravelSheet, Service
 
 from utils.clean_chat import register_bot_message, delete_message_after_delay
