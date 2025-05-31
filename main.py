@@ -274,6 +274,62 @@ def main():
     application.add_handler(CommandHandler("ieri", yesterday_command))
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("anno", year_command))
+    
+    # Comando test per debug
+    async def test_save_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Test diretto salvataggio"""
+        from database.connection import SessionLocal
+        from database.models import Service, ServiceType
+        from services.calculation_service import calculate_service_total
+        from datetime import datetime, date
+        
+        user_id = str(update.effective_user.id)
+        
+        db = SessionLocal()
+        try:
+            user = db.query(User).filter(User.telegram_id == user_id).first()
+            if not user:
+                await update.message.reply_text("❌ Utente non trovato!")
+                return
+            
+            # Crea servizio test
+            service = Service(
+                user_id=user.id,
+                date=date.today(),
+                start_time=datetime.now().replace(hour=9, minute=0),
+                end_time=datetime.now().replace(hour=15, minute=0),
+                total_hours=6.0,
+                service_type=ServiceType.LOCAL,
+                is_holiday=False,
+                is_super_holiday=False
+            )
+            
+            # Calcola
+            calc = calculate_service_total(db, user, service)
+            
+            # Salva
+            db.add(service)
+            db.commit()
+            
+            # Verifica
+            saved = db.query(Service).filter(Service.id == service.id).first()
+            if saved:
+                text = f"✅ TEST RIUSCITO!\n\n"
+                text += f"Servizio salvato con ID: {saved.id}\n"
+                text += f"Data: {saved.date}\n"
+                text += f"Ore: {saved.total_hours}\n"
+                text += f"Totale: €{saved.total_amount:.2f}"
+            else:
+                text = "❌ Errore: servizio non trovato dopo salvataggio!"
+            
+            await update.message.reply_text(text, parse_mode='HTML')
+            
+        except Exception as e:
+            await update.message.reply_text(f"❌ Errore: {str(e)}", parse_mode='HTML')
+        finally:
+            db.close()
+    
+    application.add_handler(CommandHandler("test", test_save_command))
     application.add_handler(CommandHandler("export", export_command))
     application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
     application.add_handler(CommandHandler("accumulo", accumulation_command))
