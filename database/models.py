@@ -155,6 +155,15 @@ class Service(Base):
     # JSON for detailed breakdown
     calculation_details = Column(JSON, default=dict)
     
+    
+    # Mission eligibility fields
+    distance_km = Column(Integer, default=0)
+    has_free_meals = Column(Boolean, default=False)
+    has_free_lodging = Column(Boolean, default=False)
+    meals_documented = Column(Integer, default=0)
+    ticket_cost = Column(Float, default=0)
+    toll_cost = Column(Float, default=0)
+    
     # Timestamps
     created_at = Column(DateTime, default=get_current_datetime)
     updated_at = Column(DateTime, default=get_current_datetime, onupdate=get_current_datetime)
