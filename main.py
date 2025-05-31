@@ -456,7 +456,7 @@ def main():
         # Logging handler per debug
     application.add_handler(MessageHandler(filters.ALL, log_update), group=-10)
     
-application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("hello", hello_command))
     application.add_handler(CommandHandler("ping", ping_command))
     application.add_handler(CommandHandler("status", status_command))
