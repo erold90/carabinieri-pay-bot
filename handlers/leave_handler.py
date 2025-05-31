@@ -593,7 +593,7 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
             context.user_data['editing_leave'] = None
             
         except ValueError:
-        await update.message.reply_text("❌ Inserisci un numero valido!")
+            await update.message.reply_text("❌ Inserisci un numero valido!")
 
     finally:
         db.close()
