@@ -132,9 +132,6 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
     finally:
         db.close()
-    finally:
-        db.close()
-
 async def overtime_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle overtime callbacks"""
     query = update.callback_query
@@ -208,11 +205,6 @@ async def show_overtime_detail(update: Update, context: ContextTypes.DEFAULT_TYP
     
     finally:
         db.close()
-    finally:
-
-    
-        db.close()
-
 async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Simulate accumulated overtime payment"""
     user_id = str(update.effective_user.id)
@@ -283,11 +275,6 @@ async def simulate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     finally:
         db.close()
-    finally:
-
-    
-        db.close()
-
 async def paid_hours_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for paid hours input"""
     await ask_paid_hours(update, context)
@@ -356,11 +343,6 @@ async def accumulation_command(update: Update, context: ContextTypes.DEFAULT_TYP
     
     finally:
         db.close()
-    finally:
-
-    
-        db.close()
-
 async def show_overtime_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show overtime payment history"""
     # TODO: Implement payment history when payment recording is added
