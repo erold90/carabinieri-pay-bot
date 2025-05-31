@@ -383,7 +383,8 @@ async def handle_destination(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     if service_type == ServiceType.ESCORT:
         # Per scorta, chiedi il timing dettagliato
-        text = "⏱️ <b>TIMING DETTAGLIATO</b>\n\n"
+        text = "⏱️ <b>ORARI SERVIZIO</b>\n\n"
+        text += "Ora partenza dalla sede (HH:MM):"
         text += "Inserisci gli orari nel formato HH:MM\n\n"
         text += "<b>1️⃣ ANDATA (senza VIP):</b>\n"
         text += "Ora partenza dalla sede:"
@@ -404,14 +405,13 @@ async def handle_destination(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return TRAVEL_TYPE
 
 async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle escort timing details"""
+    """Handle escort timing details - versione semplificata"""
     if not context.user_data.get('waiting_for_escort_timing'):
         return TRAVEL_TYPE
         
     phase = context.user_data.get('escort_phase')
     if not phase:
         return TRAVEL_TYPE
-        phase = context.user_data.get('escort_phase')
     
     try:
         # Parse time input
@@ -429,25 +429,10 @@ async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYP
             
         elif phase == 'arrival_time':
             context.user_data['arrival_time'] = (hour, minute)
-            await update.message.reply_text(
-                "<b>2️⃣ SERVIZIO CON VIP:</b>\n"
-                "Ora ritiro VIP:",
-                parse_mode='HTML'
-            )
-            context.user_data['escort_phase'] = 'vip_pickup'
-            
-        elif phase == 'vip_pickup':
+            # Assume che il VIP viene preso all'arrivo
             context.user_data['vip_pickup'] = (hour, minute)
-            await update.message.reply_text(
-                "Ora fine servizio con VIP:",
-                parse_mode='HTML'
-            )
-            context.user_data['escort_phase'] = 'vip_end'
             
-        elif phase == 'vip_end':
-            context.user_data['vip_end'] = (hour, minute)
             await update.message.reply_text(
-                "<b>3️⃣ RITORNO (senza VIP):</b>\n"
                 "Ora partenza per il rientro:",
                 parse_mode='HTML'
             )
@@ -455,6 +440,9 @@ async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYP
             
         elif phase == 'return_departure':
             context.user_data['return_departure'] = (hour, minute)
+            # Assume che il VIP viene lasciato alla partenza per il rientro
+            context.user_data['vip_end'] = (hour, minute)
+            
             await update.message.reply_text(
                 "Ora rientro in sede:",
                 parse_mode='HTML'
@@ -464,20 +452,10 @@ async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYP
         elif phase == 'return_arrival':
             context.user_data['return_arrival'] = (hour, minute)
             
-            # Calculate active/passive hours
+            # Calcola ore attive/passive automaticamente
             calculate_escort_hours(context)
             
-            # Ask for kilometers
-            await update.message.reply_text(
-                "🚗 Chilometri totali (andata e ritorno):",
-                parse_mode='HTML'
-            )
-            context.user_data['escort_phase'] = 'km'
-            
-        elif phase == 'km':
-            context.user_data['km_total'] = int(update.message.text)
-            
-            # Ask for mission type
+            # Chiedi tipo di pagamento missione
             text = "💶 <b>REGIME DI RIMBORSO</b>\n\n"
             text += "Scegli come essere pagato:"
             
@@ -486,6 +464,9 @@ async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYP
                 parse_mode='HTML',
                 reply_markup=get_mission_type_keyboard()
             )
+            
+            context.user_data['escort_phase'] = None
+            context.user_data['waiting_for_escort_timing'] = False
             return MEAL_DETAILS
             
     except (ValueError, IndexError):
@@ -496,46 +477,6 @@ async def handle_escort_timing(update: Update, context: ContextTypes.DEFAULT_TYP
     
     return TRAVEL_TYPE
 
-def calculate_escort_hours(context):
-    """Calculate active and passive travel hours"""
-    service_date = context.user_data['service_date']
-    
-    # Parse times
-    dep_h, dep_m = context.user_data['departure_time']
-    arr_h, arr_m = context.user_data['arrival_time']
-    vip_start_h, vip_start_m = context.user_data['vip_pickup']
-    vip_end_h, vip_end_m = context.user_data['vip_end']
-    ret_dep_h, ret_dep_m = context.user_data['return_departure']
-    ret_arr_h, ret_arr_m = context.user_data['return_arrival']
-    
-    # Create datetime objects
-    departure = datetime.combine(service_date, time(dep_h, dep_m))
-    arrival = datetime.combine(service_date, time(arr_h, arr_m))
-    vip_start = datetime.combine(service_date, time(vip_start_h, vip_start_m))
-    vip_end = datetime.combine(service_date, time(vip_end_h, vip_end_m))
-    return_dep = datetime.combine(service_date, time(ret_dep_h, ret_dep_m))
-    return_arr = datetime.combine(service_date, time(ret_arr_h, ret_arr_m))
-    
-    # Handle day crossing
-    if arrival < departure:
-        arrival += timedelta(days=1)
-    if vip_start < arrival:
-        vip_start = arrival  # VIP pickup can't be before arrival
-    if vip_end < vip_start:
-        vip_end += timedelta(days=1)
-    if return_dep < vip_end:
-        return_dep = vip_end  # Return can't start before VIP service ends
-    if return_arr < return_dep:
-        return_arr += timedelta(days=1)
-    
-    # Calculate hours
-    active_hours = (arrival - departure).total_seconds() / 3600
-    active_hours += (return_arr - return_dep).total_seconds() / 3600
-    
-    passive_hours = (vip_end - vip_start).total_seconds() / 3600
-    
-    context.user_data['active_travel_hours'] = active_hours
-    context.user_data['passive_travel_hours'] = passive_hours
 
 async def ask_mission_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for mission details"""
@@ -831,7 +772,8 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     action = query.data.replace("confirm_", "")
     
-    if action == "yes":
+    
+    if action == "yes": "yes":
         # Save service
         with get_db() as db:
             service = context.user_data['service']

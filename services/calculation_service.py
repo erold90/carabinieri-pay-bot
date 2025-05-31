@@ -165,8 +165,8 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
         else:
             mission['hourly_allowance'] = MISSION_RATES['hourly_allowance'] * total_hours
         
-        # Rimborso km
-        if service.km_total > 0:
+        # Rimborso km (solo per missioni, non scorte)
+        if service.service_type == ServiceType.MISSION and service.km_total > 0:
             mission['km_reimbursement'] = service.km_total * MISSION_RATES['km_rate']
         
         # Rimborso pasti
