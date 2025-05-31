@@ -566,8 +566,6 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
         
         db = SessionLocal()
     try:
-    finally:
-        pass
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if 'current_leave_total' in editing_type:
@@ -594,9 +592,11 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
             context.user_data['waiting_for_leave_value'] = False
             context.user_data['editing_leave'] = None
             
-    except ValueError:
+        except ValueError:
         await update.message.reply_text("❌ Inserisci un numero valido!")
 
+    finally:
+        db.close()
 async def handle_route_name_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle route name input"""
     if not context.user_data.get('adding_route'):
