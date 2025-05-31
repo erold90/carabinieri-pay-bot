@@ -41,6 +41,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
         # Get or create user
         db = SessionLocal()
+        if not db:
+            logger.error("Impossibile connettersi al database")
+            await update.effective_message.reply_text(
+                "⚠️ Database temporaneamente non disponibile\n"
+                "Il bot funziona in modalità limitata\n\n"
+                "Prova /ping o /hello"
+            )
+            return
         try:
             db_user = db.query(User).filter(User.telegram_id == str(user.id)).first()
         

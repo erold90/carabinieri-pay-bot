@@ -283,10 +283,40 @@ async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Comando ping super semplice"""
     await update.message.reply_text("🏓 Pong!")
 
+
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Mostra stato del bot"""
+    from database.connection import test_connection
+    
+    db_status = "✅ Connesso" if test_connection() else "❌ Non connesso"
+    
+    message = (
+        "🤖 <b>STATO BOT</b>\n\n"
+        f"Bot: ✅ Online\n"
+        f"Database: {db_status}\n"
+        f"Versione: 3.0\n"
+        f"Ambiente: {os.getenv('ENV', 'development')}\n\n"
+        "Comandi disponibili:\n"
+        "/ping - Test veloce\n"
+        "/hello - Info debug\n"
+        "/start - Menu principale\n"
+        "/status - Questo comando"
+    )
+    
+    await update.message.reply_text(message, parse_mode='HTML')
+
 def main():
     """Start the bot."""
     # Initialize database
-    init_db()
+    # Initialize database con gestione errori
+    try:
+        if init_db():
+            logger.info("✅ Database inizializzato")
+        else:
+            logger.warning("⚠️ Database non disponibile, modalità limitata")
+    except Exception as e:
+        logger.error(f"Errore init database: {e}")
+        logger.warning("Il bot continuerà senza database")
     
     # Create the Application
     
@@ -330,6 +360,7 @@ def main():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("hello", hello_command))
     application.add_handler(CommandHandler("ping", ping_command))
+    application.add_handler(CommandHandler("status", status_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))
