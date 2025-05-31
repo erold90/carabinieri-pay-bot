@@ -17,7 +17,7 @@ class MessageCleaner:
         # Mantieni una coda di messaggi per chat_id
         self.message_history: Dict[int, deque] = {}
         # Numero massimo di messaggi da mantenere
-        self.max_messages = 1
+        self.max_messages = 5
         # Messaggi da non eliminare (con pulsanti)
         self.protected_messages: Dict[int, set] = {}
         
@@ -91,6 +91,15 @@ async def register_bot_message(message, context: ContextTypes.DEFAULT_TYPE):
 # Middleware per intercettare tutti i messaggi
 async def cleanup_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Middleware che registra automaticamente i messaggi"""
+    # Non pulire messaggi con comandi
+    if update.message and update.message.text:
+        if update.message.text.startswith('/'):
+            # È un comando, non pulire subito
+            return
+        
+    # Aspetta che il messaggio venga processato
+    await asyncio.sleep(2)  # Delay di 2 secondi prima di registrare per pulizia
+    
     if update.message:
         await register_user_message(update, context)
 
@@ -105,9 +114,31 @@ async def delete_message_after_delay(message, delay=3):
 
 # Sistema semplificato di auto-delete
 AUTO_DELETE_ENABLED = True
-DELETE_DELAY = 30  # secondi
+DELETE_DELAY = 300  # secondi
 
 async def setup_auto_delete(application):
     """Setup auto-delete per l'applicazione"""
     print("✅ Sistema auto-delete configurato")
 
+
+
+# Aggiungi alla fine di clean_chat.py
+
+async def smart_cleanup_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Middleware intelligente che non interferisce con i comandi"""
+    if not update.message:
+        return
+    
+    # Ignora comandi
+    if update.message.text and update.message.text.startswith('/'):
+        return
+    
+    # Ignora messaggi con keyboard
+    if update.message.reply_markup:
+        return
+    
+    # Aspetta che il messaggio sia processato
+    await asyncio.sleep(3)
+    
+    # Poi registra per pulizia futura
+    await register_user_message(update, context)

@@ -167,7 +167,7 @@ def main():
     
     # Middleware per pulizia automatica messaggi
     # DEVE essere il PRIMO handler con priority massima
-    application.add_handler(MessageHandler(filters.ALL, cleanup_middleware), group=-999)
+    # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, cleanup_middleware), group=999)
 
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
@@ -304,6 +304,9 @@ def main():
     
     # Add at the end to catch unhandled callbacks
     application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
+
+    # Middleware pulizia chat - eseguito DOPO tutti gli handler
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, cleanup_middleware), group=999)
     
     # Error handler
     async def error_handler(update: Update, context):
