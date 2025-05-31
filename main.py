@@ -390,6 +390,18 @@ async def log_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         logger.debug(f"❓ Other update type: {update}")
 
+
+# Debug: log OGNI interazione con Telegram
+logger.info("🔍 DEBUG MODE ATTIVO")
+
+async def debug_middleware(update, context):
+    """Log tutto per debug"""
+    logger.info(f"🆕 Update ricevuto: {update}")
+    if update.message:
+        logger.info(f"   Messaggio: {update.message.text}")
+        logger.info(f"   Da: {update.effective_user.username}")
+
+
 def main():
     """Start the bot."""
     # Initialize database
