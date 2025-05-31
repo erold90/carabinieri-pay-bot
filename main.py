@@ -16,6 +16,7 @@ Main entry point
 import logging
 import os
 from telegram import Update
+from telegram.error import RetryAfter, TimedOut, NetworkError
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from telegram.ext import CommandHandler
@@ -399,8 +400,20 @@ def main():
     
     # Error handler
     async def error_handler(update: Update, context):
-        """Log Errors caused by Updates."""
-        logger.warning('Update "%s" caused error "%s"', update, context.error)
+    """Log Errors caused by Updates."""
+    error = context.error
+    
+    if isinstance(error, RetryAfter):
+        logger.warning(f"Rate limit: retry dopo {error.retry_after} secondi")
+        return
+    elif isinstance(error, TimedOut):
+        logger.warning("Timeout - normale durante polling")
+        return
+    elif isinstance(error, NetworkError):
+        logger.warning("Errore di rete temporaneo")
+        return
+    
+    logger.error('Update "%s" caused error "%s"', update, error)
 
     application.add_error_handler(error_handler)
     

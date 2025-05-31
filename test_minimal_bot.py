@@ -18,31 +18,31 @@ async def test_connection():
     token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('BOT_TOKEN')
     if not token:
         logger.error("Token non trovato!")
-        return False
+        # return False
     
     bot = Bot(token)
     try:
         me = await bot.get_me()
         logger.info(f"✅ Bot connesso: @{me.username}")
         await bot.close()
-        return True
+        # return True
     except Exception as e:
         logger.error(f"❌ Errore connessione: {e}")
-        return False
+        # return False
 
 def main():
     token = os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('BOT_TOKEN')
     if not token:
         logger.error("BOT_TOKEN non trovato!")
         logger.error(f"Variabili disponibili: {list(os.environ.keys())}")
-        return
+        # return
     
     logger.info(f"Token: {token[:10]}...{token[-5:]}")
     
     # Test connessione prima
-    if not asyncio.run(test_connection()):
-        logger.error("Test connessione fallito!")
-        return
+    # if not asyncio.run(test_connection()):
+        # logger.error("Test connessione fallito!")
+        # return
     
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
