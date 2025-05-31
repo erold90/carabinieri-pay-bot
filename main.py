@@ -590,42 +590,18 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_all_text_inputs))
     application.add_handler(CommandHandler("riposi", rest_command))
 
-    # Debug handler rimosso - ora abbiamo handler specifici
-
-    # Middleware pulizia chat - eseguito DOPO tutti gli handler
-
-    
     # Error handler
     application.add_error_handler(error_handler)
     
-    # Start the bot
-    logger.info("Starting CarabinieriPayBot...")
-    # # start_notification_system(application.bot)  # Disabilitato temporaneamente
-    logger.info("Bot started and polling for updates...")
-    # logger.info(f"Bot username: @{application.bot.username if hasattr(application.bot, 'username') else 'Unknown'}")
+    # Start the bot - VERSIONE CORRETTA PER RAILWAY
+    logger.info("🚀 Starting CarabinieriPayBot...")
     
-    # Avvia sistema di notifiche
-    # try:
-    # from services.notification_service import start_notification_system  # DISABILITATO - BLOCCAVA IL BOT
-    # logger.info("Avvio sistema notifiche...")
-    # start_notification_system(application.bot)  # Disabilitato temporaneamente
+    # IMPORTANTE: usa run_polling() che gestisce tutto internamente
+    application.run_polling(
+        drop_pending_updates=True,
+        allowed_updates=None,  # Ricevi TUTTI gli update
+        close_loop=False  # Non chiudere il loop
+    )
 
-    # Handler per callback non gestiti - DEVE essere l'ultimo!
-    async def handle_unknown_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-        
-        callback_data = query.data
-        logger.warning(f"Callback non implementato: {callback_data}")
-        
-        # Per i callback confirm_, mostra messaggio temporaneo
-        if callback_data.startswith("confirm_"):
-            await query.answer("⚠️ Usa i bottoni durante la registrazione del servizio", show_alert=True)
-        elif "back_to_menu" in callback_data:
-            await start_command(update, context)
-        elif "setup_start" in callback_data:
-            await query.answer("Usa /impostazioni per configurare il profilo", show_alert=True)
-        else:
-            await query.answer("Funzione in sviluppo", show_alert=True)
 if __name__ == '__main__':
     main()
