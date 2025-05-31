@@ -1,3 +1,4 @@
+import asyncio
 import gc
 #!/usr/bin/env python
 # Deploy forzato: 2025-05-31 00:49:55
@@ -323,6 +324,72 @@ async def periodic_gc(context: ContextTypes.DEFAULT_TYPE):
     if collected > 0:
         logger.debug(f"Garbage collection: {collected} oggetti liberati")
 
+
+async def cleanup_webhook_on_start(application):
+    """Rimuove webhook all'avvio per garantire polling pulito"""
+    try:
+        await application.bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook rimosso, polling mode attivo")
+        
+        # Verifica che non ci siano webhook
+        webhook_info = await application.bot.get_webhook_info()
+        if webhook_info.url:
+            logger.warning(f"⚠️ Webhook ancora presente: {webhook_info.url}")
+        else:
+            logger.info("✅ Nessun webhook attivo")
+            
+    except Exception as e:
+        logger.error(f"Errore rimozione webhook: {e}")
+
+
+
+async def start_bot(application):
+    """Avvia il bot con gestione asincrona corretta"""
+    # Cleanup webhook prima di iniziare
+    logger.info("🚀 Avvio CarabinieriPayBot...")
+    
+    # Inizializza e pulisci webhook
+    await application.initialize()
+    await cleanup_webhook_on_start(application)
+    
+    # Avvia bot info
+    try:
+        bot_info = await application.bot.get_me()
+        logger.info(f"✅ Bot: @{bot_info.username} (ID: {bot_info.id})")
+    except Exception as e:
+        logger.error(f"❌ Errore info bot: {e}")
+    
+    # Start polling con parametri ottimizzati
+    logger.info("📡 Avvio polling...")
+    await application.start()
+    await application.updater.start_polling(
+        drop_pending_updates=True,
+        allowed_updates=Update.ALL_TYPES,
+        read_timeout=30,
+        write_timeout=30,
+        connect_timeout=30,
+        pool_timeout=30
+    )
+    
+    logger.info("✅ Bot avviato e in ascolto!")
+    logger.info("📱 Invia /start al bot per testare")
+    
+    # Mantieni il bot in esecuzione
+    await application.updater.idle()
+
+
+# Aggiungi logging per ogni update ricevuto
+async def log_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log ogni update per debug"""
+    if update.message:
+        logger.debug(f"📨 Message update: {update.message.text} from {update.effective_user.id}")
+    elif update.callback_query:
+        logger.debug(f"🔘 Callback update: {update.callback_query.data}")
+    elif update.edited_message:
+        logger.debug(f"✏️ Edited message update")
+    else:
+        logger.debug(f"❓ Other update type: {update}")
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -386,7 +453,10 @@ def main():
     application.add_handler(MessageHandler(filters.ALL, log_all_messages), group=-10)
     logger.info("📝 Message logger aggiunto")
 
-    application.add_handler(CommandHandler("start", start_command))
+        # Logging handler per debug
+    application.add_handler(MessageHandler(filters.ALL, log_update), group=-10)
+    
+application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("hello", hello_command))
     application.add_handler(CommandHandler("ping", ping_command))
     application.add_handler(CommandHandler("status", status_command))
