@@ -254,6 +254,19 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     logger.warning('Update "%s" caused error "%s"', update, error)
 
+
+# Aggiungi questo handler di test in main.py
+async def hello_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comando test semplice"""
+    logger.info("HELLO COMMAND CHIAMATO")
+    await update.message.reply_text(
+        "👋 Ciao! Il bot funziona!\n\n"
+        "Debug info:\n"
+        f"User ID: {update.effective_user.id}\n"
+        f"Chat ID: {update.effective_chat.id}\n"
+        f"Username: @{update.effective_user.username}"
+    )
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -299,6 +312,7 @@ def main():
     logger.info("📝 Message logger aggiunto")
 
     application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("hello", hello_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))

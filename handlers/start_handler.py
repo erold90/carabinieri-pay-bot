@@ -21,6 +21,9 @@ from services.calculation_service import calculate_month_totals
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
+    logger.info("🚀 START COMMAND CHIAMATO!")
+    logger.info(f"User: {update.effective_user.id if update.effective_user else 'Unknown'}")
+    logger.info(f"Chat: {update.effective_chat.id if update.effective_chat else 'Unknown'}")
     try:
         logger.info("Start command received")
         # Gestisci sia messaggi che callback query
