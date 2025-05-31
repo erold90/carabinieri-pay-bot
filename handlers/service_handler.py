@@ -773,7 +773,7 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     action = query.data.replace("confirm_", "")
     
     
-    if action == "yes": "yes":
+    if action == "yes":
         # Save service
         with get_db() as db:
             service = context.user_data['service']
