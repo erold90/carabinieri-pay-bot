@@ -1109,5 +1109,5 @@ service_conversation_handler = ConversationHandler(per_message=True, entry_point
         ]
     },
     fallbacks=[CommandHandler("start", start_command)],
-    per_message=False
+    per_message=True
 )

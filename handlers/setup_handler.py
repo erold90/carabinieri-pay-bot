@@ -185,5 +185,5 @@ setup_conversation_handler = ConversationHandler(per_message=True, entry_points=
         SETUP_LEAVE: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_leave)]
     },
     fallbacks=[CommandHandler("start", lambda u, c: ConversationHandler.END)],
-    per_message=False
+    per_message=True
 )
