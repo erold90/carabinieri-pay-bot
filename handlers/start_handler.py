@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 """
 Start command and dashboard handler
@@ -17,6 +21,7 @@ from services.calculation_service import calculate_month_totals
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
+    logger.info("Start command received")
     # Gestisci sia messaggi che callback query
     if update.message:
         user = update.message.from_user
