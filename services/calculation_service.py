@@ -187,6 +187,11 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
 def calculate_service_total(db: Session, user: User, service: Service) -> dict:
     """
     Calculates ALL net amounts for a service - COMPLETE VERSION
+    
+    IMPORTANTE per SCORTE:
+    - Ore di viaggio ATTIVO (senza VIP) sono pagate come Maggiorazione Viaggio (€8/ora)
+    - Ore di viaggio PASSIVO (con VIP) sono pagate come Straordinario normale
+    - Le ore attive NON devono essere conteggiate anche come straordinario!
     """
     calculations = {
         'overtime': {},
@@ -221,28 +226,32 @@ def calculate_service_total(db: Session, user: User, service: Service) -> dict:
     calculations['allowances'] = allowances
     calculations['totals']['allowances'] = sum(allowances.values())
     
-    # 2. STRAORDINARI
+        # 2. STRAORDINARI
     extra_hours = max(0, service.total_hours - user.base_shift_hours - service.recovery_hours)
     
     if service.service_type == ServiceType.ESCORT:
-        # Per scorta: ore passive sono straordinario
-        passive_overtime = min(extra_hours, service.passive_travel_hours)
-        if passive_overtime > 0:
+        # IMPORTANTE: Le ore di viaggio attivo NON sono straordinario
+        # ma vengono pagate come maggiorazione viaggio (€8/ora)
+        
+        # Sottrai le ore di viaggio attivo dal totale straordinari
+        active_hours = service.active_travel_hours or 0
+        if active_hours > 0:
+            # Le ore attive vanno pagate come maggiorazione, non straordinario
+            calculations['mission']['active_travel'] = active_hours * MISSION_RATES['travel_hourly']
+            # Riduci le ore extra totali delle ore attive
+            extra_hours = max(0, extra_hours - active_hours)
+        
+        # Ora calcola lo straordinario solo sulle ore rimanenti (passive + servizio)
+        if extra_hours > 0:
             ot_details = calculate_overtime_by_hour(
-                service.start_time + timedelta(hours=user.base_shift_hours),
-                service.start_time + timedelta(hours=user.base_shift_hours + passive_overtime),
+                service.start_time,
+                service.end_time,
                 service.is_holiday or service.is_super_holiday,
-                0  # già saltato il turno base
+                user.base_shift_hours + service.recovery_hours + active_hours  # Salta anche ore attive
             )
             calculations['overtime'].update(ot_details)
-            extra_hours -= passive_overtime
-        
-        # Ore attive come maggiorazione viaggio
-        if service.active_travel_hours > 0:
-            calculations['mission']['active_travel'] = service.active_travel_hours * MISSION_RATES['travel_hourly']
-    
-    # Straordinari rimanenti
-    if extra_hours > 0:
+    else:
+        # Per servizi non-escort, tutto normale
         ot_details = calculate_overtime_by_hour(
             service.start_time,
             service.end_time,
