@@ -1,0 +1,7 @@
+Ultimo deploy: 2025-05-31 21:17:30
+Modifiche applicate:
+- Fix sintassi async/await
+- Calculate_escort_hours implementata
+- Controllo territorio escluso per scorte
+- Visualizzazione pasti nel riepilogo
+- Callback confirm_yes funzionante
