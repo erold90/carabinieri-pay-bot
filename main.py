@@ -80,12 +80,14 @@ from handlers.settings_handler import (
 from handlers.setup_handler import setup_conversation_handler
 
 # Import handler mancanti per input testuali
+from handlers.leave_handler import (
     handle_leave_value_input,
     handle_route_name_input, 
     handle_route_km_input,
     handle_patron_saint_input,
     handle_reminder_time_input
 )
+from handlers.travel_sheet_handler import (
     handle_travel_sheet_selection,
     handle_travel_sheet_search
 )
