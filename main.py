@@ -16,7 +16,7 @@ Main entry point
 import logging
 import os
 from telegram import Update
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 from telegram.ext import CommandHandler
 from dotenv import load_dotenv
@@ -235,6 +235,17 @@ def main():
     init_db()
     
     # Create the Application
+    
+    
+    # Debug: verifica token
+    token = os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
+    if not token:
+        logger.error("❌ BOT TOKEN NON TROVATO!")
+        logger.error("Variabili ambiente disponibili: %s", list(os.environ.keys()))
+        return
+    else:
+        logger.info(f"✅ Token trovato: {token[:10]}...{token[-5:]}")
+    
     application = Application.builder().token(
         os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
     ).build()
