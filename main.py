@@ -157,6 +157,16 @@ async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT
 
 
 
+
+async def log_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Log tutti i messaggi per debug"""
+    if update.message:
+        logger.info(f"📨 MESSAGGIO RICEVUTO: '{update.message.text}' da @{update.message.from_user.username if update.message.from_user else 'Unknown'}")
+        if update.message.text and update.message.text.startswith('/'):
+            logger.info(f"   È UN COMANDO: {update.message.text}")
+    elif update.callback_query:
+        logger.info(f"🔘 CALLBACK RICEVUTO: '{update.callback_query.data}'")
+
 # Debug handler - rimuovere in produzione
 def main():
     """Start the bot."""
@@ -183,6 +193,10 @@ def main():
     # Add at the end to catch unhandled callbacks
 
     # Command handlers - start DEVE essere il primo!
+    # Logger per debug - PRIMO handler
+    application.add_handler(MessageHandler(filters.ALL, log_all_messages), group=-10)
+    logger.info("📝 Message logger aggiunto")
+
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))

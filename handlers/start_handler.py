@@ -80,6 +80,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def send_welcome_setup(update: Update, context: ContextTypes.DEFAULT_TYPE, user: User):
     """Send welcome message for new users"""
+    logger.info("🚀 START COMMAND CHIAMATO!")
+    logger.info(f"User: {update.effective_user.id if update.effective_user else 'Unknown'}")
+    logger.info(f"Chat: {update.effective_chat.id if update.effective_chat else 'Unknown'}")
     welcome_text = (
         "🎯 <b>Benvenuto in CarabinieriPayBot v3.0!</b>\n\n"
         "Il sistema definitivo per il calcolo stipendi dell'Arma.\n\n"
