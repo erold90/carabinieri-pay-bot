@@ -18,6 +18,7 @@ import os
 from telegram import Update
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler, ContextTypes
+from telegram.ext import CommandHandler
 from dotenv import load_dotenv
 from utils.clean_chat import cleanup_middleware
 
@@ -180,6 +181,17 @@ def main():
         )
     
     # Add at the end to catch unhandled callbacks
+
+    # Command handlers - start DEVE essere il primo!
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("nuovo", new_service_command))
+    application.add_handler(CommandHandler("scorta", new_service_command))
+    application.add_handler(CommandHandler("straordinari", overtime_command))
+    application.add_handler(CommandHandler("fv", travel_sheets_command))
+    application.add_handler(CommandHandler("licenze", leave_command))
+    application.add_handler(CommandHandler("impostazioni", settings_command))
+    application.add_handler(CommandHandler("oggi", today_command))
+    application.add_handler(CommandHandler("mese", month_command))
     application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
 
     # Middleware pulizia chat - eseguito DOPO tutti gli handler
