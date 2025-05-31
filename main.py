@@ -234,21 +234,12 @@ def main():
     # Initialize database
     init_db()
     
-    # Create the Application with timeout più lungo
+    # Create the Application
     application = Application.builder().token(
         os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
-    ).connect_timeout(30.0).read_timeout(30.0).build()
+    ).build()
     
-    # Pulisci webhook all'avvio per evitare conflitti
-    import asyncio
-    async def cleanup():
-        try:
-            await application.bot.delete_webhook(drop_pending_updates=True)
-            logger.info("Webhook pulito all'avvio")
-        except:
-            pass
-    
-    asyncio.run(cleanup())
+
     
     # Middleware per pulizia automatica messaggi
     # DEVE essere il PRIMO handler con priority massima
@@ -358,7 +349,7 @@ def main():
     
     # Start the bot
     logger.info("Starting CarabinieriPayBot...")
-    # start_notification_system(application.bot)
+    # # start_notification_system(application.bot)  # Disabilitato temporaneamente
     logger.info("Bot started and polling for updates...")
     # logger.info(f"Bot username: @{application.bot.username if hasattr(application.bot, 'username') else 'Unknown'}")
     
@@ -366,7 +357,7 @@ def main():
     try:
         from services.notification_service import start_notification_system
         logger.info("Avvio sistema notifiche...")
-        start_notification_system(application.bot)
+    # start_notification_system(application.bot)  # Disabilitato temporaneamente
     except Exception as e:
         logger.error(f"Impossibile avviare notifiche: {e}")
 
