@@ -20,6 +20,7 @@ from utils.formatters import format_currency, format_date
 from services.calculation_service import calculate_month_totals
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f"✅ COMANDO /start ricevuto da {update.effective_user.username if update.effective_user else 'Unknown'}")
     """Handle /start command"""
     logger.info("🚀 START COMMAND CHIAMATO!")
     logger.info(f"User: {update.effective_user.id if update.effective_user else 'Unknown'}")
