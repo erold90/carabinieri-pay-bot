@@ -77,6 +77,21 @@ from handlers.settings_handler import (
 )
 from handlers.setup_handler import setup_conversation_handler
 
+# Import handler mancanti per input testuali
+from handlers.leave_handler import (
+    handle_leave_value_input,
+    handle_route_name_input, 
+    handle_route_km_input,
+    handle_patron_saint_input,
+    handle_reminder_time_input
+)
+from handlers.travel_sheet_handler import (
+    handle_travel_sheet_selection,
+    handle_travel_sheet_search
+)
+from handlers.overtime_handler import handle_paid_hours_input
+from handlers.export_handler import generate_excel_export
+
 # Load environment variables
 load_dotenv()
 
@@ -168,6 +183,52 @@ async def log_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"🔘 CALLBACK RICEVUTO: '{update.callback_query.data}'")
 
 # Debug handler - rimuovere in produzione
+
+# Handler unificato per tutti gli input testuali
+async def handle_all_text_inputs(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler per tutti gli input testuali"""
+    user_data = context.user_data
+    
+    # Leave values
+    if user_data.get('waiting_for_leave_value'):
+        return await handle_leave_value_input(update, context)
+    
+    # Route names
+    elif user_data.get('adding_route'):
+        return await handle_route_name_input(update, context)
+    
+    # Route km
+    elif user_data.get('adding_route_km'):
+        return await handle_route_km_input(update, context)
+    
+    # Patron saint
+    elif user_data.get('setting_patron_saint'):
+        return await handle_patron_saint_input(update, context)
+    
+    # Reminder time
+    elif user_data.get('setting_reminder_time'):
+        return await handle_reminder_time_input(update, context)
+    
+    # Travel sheet selection
+    elif user_data.get('waiting_for_fv_selection'):
+        return await handle_travel_sheet_selection(update, context)
+    
+    # FV search
+    elif user_data.get('waiting_for_fv_search'):
+        return await handle_travel_sheet_search(update, context)
+    
+    # Paid hours
+    elif user_data.get('waiting_for_paid_hours'):
+        return await handle_paid_hours_input(update, context)
+    
+    # Command input (da settings)
+    elif user_data.get('waiting_for_command'):
+        return await handle_text_input(update, context)
+    
+    # Base hours input
+    elif user_data.get('waiting_for_base_hours'):
+        return await handle_text_input(update, context)
+
 def main():
     """Start the bot."""
     # Initialize database
@@ -206,7 +267,53 @@ def main():
     application.add_handler(CommandHandler("impostazioni", settings_command))
     application.add_handler(CommandHandler("oggi", today_command))
     application.add_handler(CommandHandler("mese", month_command))
-    application.add_handler(CallbackQueryHandler(debug_unhandled_callback))
+    # CRITICAL: Conversation handlers - DEVONO essere prima dei callback generici!
+    application.add_handler(service_conversation_handler)
+    application.add_handler(setup_conversation_handler)
+    
+    # Handler per callback specifici delle licenze
+    application.add_handler(CallbackQueryHandler(handle_leave_edit, pattern="^edit_(current_leave_total|current_leave_used|previous_leave)$"))
+    
+    # Handler per percorsi salvati
+    application.add_handler(CallbackQueryHandler(handle_route_action, pattern="^(add|remove)_route$"))
+    application.add_handler(CallbackQueryHandler(handle_patron_saint, pattern="^set_patron_saint$"))
+    application.add_handler(CallbackQueryHandler(handle_reminder_time, pattern="^change_reminder_time$"))
+    
+    # Handler per selezione pasti
+    application.add_handler(CallbackQueryHandler(handle_meal_selection, pattern="^meal_(lunch|dinner)$"))
+    application.add_handler(CallbackQueryHandler(handle_meals, pattern="^meal_confirm$"))
+    
+    # Handler per tipi missione
+    application.add_handler(CallbackQueryHandler(handle_mission_type, pattern="^mission_type_"))
+    
+    # Handler per navigazione settings
+    application.add_handler(CallbackQueryHandler(update_rank, pattern="^rank_[0-9]+$"))
+    application.add_handler(CallbackQueryHandler(update_irpef, pattern="^irpef_[0-9]+$"))
+    
+    # Handler per navigazione back
+    application.add_handler(CallbackQueryHandler(handle_back_navigation, pattern="^back_"))
+    
+    # Handler per dashboard callbacks
+    application.add_handler(CallbackQueryHandler(dashboard_callback, pattern="^dashboard_"))
+    
+    # Handler per altri callback specifici
+    application.add_handler(CallbackQueryHandler(overtime_callback, pattern="^overtime_"))
+    application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
+    application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
+    application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
+    application.add_handler(CallbackQueryHandler(rest_callback, pattern="^rest_"))
+    
+    # Handler per toggle notifiche
+    application.add_handler(CallbackQueryHandler(toggle_notification, pattern="^toggle_"))
+    
+    # Comandi aggiuntivi
+    application.add_handler(CommandHandler("export", generate_excel_export))
+    
+    # Handler per input testuali - DEVE essere uno degli ultimi!
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_all_text_inputs))
+    application.add_handler(CommandHandler("riposi", rest_command))
+
+    # Debug handler rimosso - ora abbiamo handler specifici
 
     # Middleware pulizia chat - eseguito DOPO tutti gli handler
 
@@ -223,6 +330,15 @@ def main():
     # start_notification_system(application.bot)
     logger.info("Bot started and polling for updates...")
     # logger.info(f"Bot username: @{application.bot.username if hasattr(application.bot, 'username') else 'Unknown'}")
+    
+    # Avvia sistema di notifiche
+    try:
+        from services.notification_service import start_notification_system
+        logger.info("Avvio sistema notifiche...")
+        start_notification_system(application.bot)
+    except Exception as e:
+        logger.error(f"Impossibile avviare notifiche: {e}")
+    
     application.run_polling()
 
 if __name__ == '__main__':
