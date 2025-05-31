@@ -16,6 +16,7 @@ Main entry point
 """
 
 import logging
+from utils.logging_config import setup_logging, log_info, log_success, log_error, log_warning
 import os
 from telegram import Update
 from telegram.error import RetryAfter, TimedOut, NetworkError
@@ -98,21 +99,8 @@ from handlers.export_handler import generate_excel_export
 # Load environment variables
 load_dotenv()
 
-# Enable logging
-# Configure logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO if os.getenv('ENV') == 'production' else logging.DEBUG,
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('bot.log', encoding='utf-8')
-    ]
-)
-
-# Riduci verbosità per alcuni moduli
-logging.getLogger('httpx').setLevel(logging.WARNING)
-logging.getLogger('telegram.ext._application').setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
+# Setup logging
+logger = setup_logging()
 
 
 # Handler per callback non implementati
@@ -188,7 +176,7 @@ async def debug_unhandled_callback(update: Update, context: ContextTypes.DEFAULT
 async def log_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log tutti i messaggi per debug"""
     if update.message:
-        logger.info(f"📨 MESSAGGIO RICEVUTO: '{update.message.text}' da @{update.message.from_user.username if update.message.from_user else 'Unknown'}")
+        # logger\.info\(f"📨 MESSAGGIO RICEVUTO:.*?
         if update.message.text and update.message.text.startswith('/'):
             logger.info(f"   È UN COMANDO: {update.message.text}")
     elif update.callback_query:
@@ -335,7 +323,7 @@ async def cleanup_webhook_on_start(application):
         # Verifica che non ci siano webhook
         webhook_info = await application.bot.get_webhook_info()
         if webhook_info.url:
-            logger.warning(f"⚠️ Webhook ancora presente: {webhook_info.url}")
+            log_warning(f" Webhook ancora presente: {webhook_info.url}")
         else:
             logger.info("✅ Nessun webhook attivo")
             
@@ -358,7 +346,7 @@ async def start_bot(application):
         bot_info = await application.bot.get_me()
         logger.info(f"✅ Bot: @{bot_info.username} (ID: {bot_info.id})")
     except Exception as e:
-        logger.error(f"❌ Errore info bot: {e}")
+        log_error(f"Errore info bot: {e}")
     
     # Start polling con parametri ottimizzati
     logger.info("📡 Avvio polling...")
@@ -372,7 +360,7 @@ async def start_bot(application):
         pool_timeout=30
     )
     
-    logger.info("✅ Bot avviato e in ascolto!")
+    log_success("Bot avviato e in ascolto!")
     logger.info("📱 Invia /start al bot per testare")
     
     # Mantieni il bot in esecuzione
@@ -383,13 +371,13 @@ async def start_bot(application):
 async def log_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log ogni update per debug"""
     if update.message:
-        logger.debug(f"📨 Message update: {update.message.text} from {update.effective_user.id}")
+        # logger\.debug\(f"📨 Message update:.*?
     elif update.callback_query:
-        logger.debug(f"🔘 Callback update: {update.callback_query.data}")
+        # logger\.debug\(f"🔘 Callback update:.*?
     elif update.edited_message:
         logger.debug(f"✏️ Edited message update")
     else:
-        logger.debug(f"❓ Other update type: {update}")
+        # logger\.debug\(f"❓ Other update type:.*?
 
 
 # Debug: log OGNI interazione con Telegram
@@ -597,7 +585,7 @@ def main():
     application.add_error_handler(error_handler)
     
     # Start the bot - VERSIONE CORRETTA PER RAILWAY
-    logger.info("🚀 Starting CarabinieriPayBot...")
+    log_info("Avvio CarabinieriPayBot...")
     
     # IMPORTANTE: usa run_polling() che gestisce tutto internamente
     application.run_polling(
