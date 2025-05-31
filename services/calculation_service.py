@@ -222,9 +222,10 @@ def calculate_service_total(db: Session, user: User, service: Service) -> dict:
         if service.is_double_shift:
             allowances['external_service_2'] = SERVICE_ALLOWANCES['external_service']
     
-    # Controllo territorio
-    territory = calculate_territory_control(service.start_time, service.end_time, service.total_hours)
-    allowances.update(territory)
+    # Controllo territorio (solo per servizi locali, non scorte)
+    if service.service_type == ServiceType.LOCAL:
+        territory = calculate_territory_control(service.start_time, service.end_time, service.total_hours)
+        allowances.update(territory)
     
     calculations['allowances'] = allowances
     calculations['totals']['allowances'] = sum(allowances.values())

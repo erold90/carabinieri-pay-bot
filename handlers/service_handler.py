@@ -733,6 +733,27 @@ def format_detailed_summary(service, calculations):
         else:
             text += f"\n<b>3️⃣ MISSIONE (Regime: ORDINARIO)</b>\n"
         
+        # Mostra dettagli pasti se applicabile
+        if service.service_type in [ServiceType.ESCORT, ServiceType.MISSION]:
+            meals_entitled = 0
+            if service.total_hours >= 8:
+                meals_entitled = 1
+            if service.total_hours >= 12:
+                meals_entitled = 2
+            
+            if meals_entitled > 0:
+                meals_consumed = service.meals_consumed or 0
+                meals_not_consumed = meals_entitled - meals_consumed
+                
+                text += f"\n🍽️ <b>PASTI:</b>\n"
+                text += f"├ Diritto a {meals_entitled} pasti (servizio {service.total_hours:.0f}h)\n"
+                text += f"├ Consumati: {meals_consumed}\n"
+                text += f"├ NON consumati: {meals_not_consumed}\n"
+                
+                if 'meal_reimbursement' in calculations['mission']:
+                    text += f"└ Rimborso: {format_currency(calculations['mission']['meal_reimbursement'])}\n"
+        
+        
         
         # Traduzioni chiavi missione
         mission_names = {
