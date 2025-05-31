@@ -441,7 +441,6 @@ async def main():
     application.add_handler(CommandHandler("ieri", yesterday_command))
     application.add_handler(CommandHandler("settimana", week_command))
     application.add_handler(CommandHandler("anno", year_command))
-    application.add_handler(CommandHandler("test", test_save_command))
     application.add_handler(CommandHandler("export", export_command))
     application.add_handler(CommandHandler("ore_pagate", paid_hours_command))
     application.add_handler(CommandHandler("accumulo", accumulation_command))
