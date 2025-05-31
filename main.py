@@ -438,10 +438,16 @@ def main():
         query = update.callback_query
         await query.answer()
         logger.warning(f"Callback non gestito: {query.data}")
-        await query.edit_message_text(
-            f"⚠️ Funzione in sviluppo: {query.data}\n\nTorna al menu con /start",
-            parse_mode='HTML'
-        )
+        # Gestione specifica per confirm_yes
+    if query.data == "confirm_yes":
+        from handlers.service_handler import handle_confirmation
+        return await handle_confirmation(update, context)
+    
+    # Default per altri callback non gestiti
+    await query.edit_message_text(
+        f"⚠️ Funzione in sviluppo: {query.data}\n\nTorna al menu con /start",
+        parse_mode='HTML'
+    )
     
     # Add at the end to catch unhandled callbacks
 
