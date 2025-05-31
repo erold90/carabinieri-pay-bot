@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import holidays
 
 from database.models import User, Service, Overtime, OvertimeType, ServiceType
-from config.constants import OVERTIME_RATES, SERVICE_ALLOWANCES, MISSION_RATES, FORFEIT_RATES, MEAL_RATES, SUPER_HOLIDAYS
+from config.constants import OVERTIME_RATES, FUEL_REIMBURSEMENT, SERVICE_ALLOWANCES, MISSION_RATES, FORFEIT_RATES, MEAL_RATES, SUPER_HOLIDAYS
 
 def calculate_easter(year):
     """Calcola la data di Pasqua per un dato anno usando l'algoritmo di Gauss"""
@@ -167,7 +167,7 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
         
         # Rimborso km (solo per missioni, non scorte)
         if service.service_type == ServiceType.MISSION and service.km_total > 0:
-            mission['km_reimbursement'] = service.km_total * MISSION_RATES['km_rate']
+            mission['km_reimbursement'] = service.km_total * FUEL_REIMBURSEMENT['benzina_1_5']
         
         # Rimborso pasti
         meals_entitled = 0
