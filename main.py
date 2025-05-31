@@ -492,4 +492,20 @@ async def main():
     )
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(main())
+    import sys
+    
+    # Per Python 3.11 e Railway
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        if "This event loop is already running" in str(e):
+            # Fallback per ambienti con event loop già attivo
+            import nest_asyncio
+            nest_asyncio.apply()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(main())
+        else:
+            raise
