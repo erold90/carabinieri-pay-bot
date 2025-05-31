@@ -177,7 +177,7 @@ async def setup_leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # Conversation handler per il setup
-setup_conversation_handler = ConversationHandler(per_message=True, entry_points=[CallbackQueryHandler(setup_start, pattern="^setup_start$")],
+setup_conversation_handler = ConversationHandler(per_message=True,  entry_points=[CallbackQueryHandler(setup_start, pattern="^setup_start$")],
     states={
         SETUP_RANK: [CallbackQueryHandler(setup_rank, pattern="^rank_")],
         SETUP_COMMAND: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_command)],
@@ -185,5 +185,4 @@ setup_conversation_handler = ConversationHandler(per_message=True, entry_points=
         SETUP_LEAVE: [MessageHandler(filters.TEXT & ~filters.COMMAND, setup_leave)]
     },
     fallbacks=[CommandHandler("start", lambda u, c: ConversationHandler.END)],
-    per_message=True
-)
+    )

@@ -1072,7 +1072,7 @@ async def handle_meal_selection(update: Update, context: ContextTypes.DEFAULT_TY
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-service_conversation_handler = ConversationHandler(per_message=True, entry_points=[
+service_conversation_handler = ConversationHandler(per_message=True,  entry_points=[
         CommandHandler("nuovo", new_service_command),
         CommandHandler("scorta", new_service_command),
         CallbackQueryHandler(new_service_command, pattern="^dashboard_new_")
@@ -1109,5 +1109,4 @@ service_conversation_handler = ConversationHandler(per_message=True, entry_point
         ]
     },
     fallbacks=[CommandHandler("start", start_command)],
-    per_message=True
-)
+    )
