@@ -258,14 +258,30 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Aggiungi questo handler di test in main.py
 async def hello_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Comando test semplice"""
-    logger.info("HELLO COMMAND CHIAMATO")
-    await update.message.reply_text(
-        "👋 Ciao! Il bot funziona!\n\n"
-        "Debug info:\n"
-        f"User ID: {update.effective_user.id}\n"
-        f"Chat ID: {update.effective_chat.id}\n"
-        f"Username: @{update.effective_user.username}"
-    )
+    try:
+        logger.info("HELLO COMMAND CHIAMATO")
+        user_id = update.effective_user.id if update.effective_user else "Unknown"
+        chat_id = update.effective_chat.id if update.effective_chat else "Unknown"
+        username = update.effective_user.username if update.effective_user else "Unknown"
+        
+        message = (
+            "👋 Ciao! Il bot funziona!\n\n"
+            "Debug info:\n"
+            f"User ID: {user_id}\n"
+            f"Chat ID: {chat_id}\n"
+            f"Username: @{username}"
+        )
+        
+        await update.message.reply_text(message)
+        logger.info("Hello command completato con successo")
+    except Exception as e:
+        logger.error(f"Errore in hello_command: {e}", exc_info=True)
+        await update.message.reply_text("❌ Errore nel comando hello")
+
+
+async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comando ping super semplice"""
+    await update.message.reply_text("🏓 Pong!")
 
 def main():
     """Start the bot."""
@@ -313,6 +329,7 @@ def main():
 
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("hello", hello_command))
+    application.add_handler(CommandHandler("ping", ping_command))
     application.add_handler(CommandHandler("nuovo", new_service_command))
     application.add_handler(CommandHandler("scorta", new_service_command))
     application.add_handler(CommandHandler("straordinari", overtime_command))
