@@ -387,7 +387,7 @@ async def debug_middleware(update, context):
         logger.info(f"   Da: {update.effective_user.username}")
 
 
-def main():
+async def main():
     """Start the bot."""
     # Initialize database
     # Initialize database con gestione errori
