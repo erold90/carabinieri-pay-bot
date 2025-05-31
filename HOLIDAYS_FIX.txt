@@ -1,0 +1,9 @@
+# Per rimuovere temporaneamente holidays:
+# 1. In services/calculation_service.py, commenta:
+#    import holidays
+# 2. Sostituisci is_holiday() con una versione semplificata:
+#    def is_holiday(d: date, patron_saint_date: date = None) -> bool:
+#        return d.weekday() == 6  # Solo domeniche
+
+# Oppure installa il modulo:
+pip3 install holidays
