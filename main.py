@@ -323,6 +323,7 @@ def main():
     application.add_handler(CallbackQueryHandler(leave_callback, pattern="^leave_"))
     application.add_handler(CallbackQueryHandler(travel_sheet_callback, pattern="^fv_"))
     application.add_handler(CallbackQueryHandler(settings_callback, pattern="^settings_"))
+    application.add_handler(CallbackQueryHandler(handle_confirmation, pattern="^confirm_"))
     application.add_handler(CallbackQueryHandler(rest_callback, pattern="^rest_"))
     
     # Handler per toggle notifiche
@@ -374,6 +375,10 @@ def main():
             await start_command(update, context)
         elif "setup_start" in callback_data:
             await query.answer("Usa /impostazioni per configurare il profilo", show_alert=True)
+        elif callback_data.startswith("confirm_"):
+            # Routing per conferma servizio
+            from handlers.service_handler import handle_confirmation
+            await handle_confirmation(update, context)
         else:
             await query.answer("Funzione in sviluppo", show_alert=True)
     
