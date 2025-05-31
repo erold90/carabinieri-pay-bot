@@ -440,24 +440,6 @@ async def main():
         await query.answer()
         logger.warning(f"Callback non gestito: {query.data}")
     
-        # Gestione specifica per confirm_yes
-        if query.data == "confirm_yes":
-            try:
-                from handlers.service_handler import handle_confirmation
-                return await handle_confirmation(update, context)
-            except Exception as e:
-                logger.error(f"Errore in handle_confirmation: {e}")
-    
-        # Default per altri callback
-        try:
-            await query.edit_message_text(
-                f"⚠️ Funzione in sviluppo: {query.data}\n\nTorna al menu con /start",
-                parse_mode='HTML'
-            )
-        except Exception as e:
-            logger.error(f"Errore in edit_message_text: {e}")
-
-
     if query.data == "confirm_yes":
         from handlers.service_handler import handle_confirmation
         return await handle_confirmation(update, context)
