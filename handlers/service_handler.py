@@ -749,8 +749,17 @@ def format_detailed_summary(service, calculations):
     if calculations['overtime']:
         text += "\n<b>1️⃣ STRAORDINARI</b>\n"
         
+                
+        # Traduzioni tipi straordinario
+        type_names = {
+            'WEEKDAY_DAY': 'Feriale Diurno',
+            'WEEKDAY_NIGHT': 'Feriale Notturno',
+            'HOLIDAY_DAY': 'Festivo Diurno',
+            'HOLIDAY_NIGHT': 'Festivo Notturno'
+        }
+        
         for ot_type, details in calculations['overtime'].items():
-            text += f"├ {ot_type}: {details['hours']:.1f}h × "
+            text += f"├ {type_names.get(ot_type, ot_type)}: {details['hours']:.1f}h × "
             text += f"{format_currency(details['rate'])} = "
             text += f"{format_currency(details['amount'])}\n"
         
@@ -783,6 +792,19 @@ def format_detailed_summary(service, calculations):
         else:
             text += f"\n<b>3️⃣ MISSIONE (Regime: ORDINARIO)</b>\n"
         
+        
+        # Traduzioni chiavi missione
+        mission_names = {
+            'km': 'Chilometri',
+            'forfeit_24h': 'Forfettario 24h',
+            'forfeit': 'Forfettario',
+            'active_travel': 'Maggiorazione viaggio',
+            'hourly_allowance': 'Indennità oraria',
+            'daily_allowance': 'Diaria giornaliera',
+            'km_reimbursement': 'Rimborso chilometrico',
+            'meal_reimbursement': 'Rimborso pasti'
+        }
+        
         for key, amount in calculations['mission'].items():
             if key == 'km':
                 text += f"├ Km ({service.km_total} A/R): {format_currency(amount)}\n"
@@ -792,7 +814,7 @@ def format_detailed_summary(service, calculations):
                 hours = service.active_travel_hours
                 text += f"├ Viaggio attivo: {hours:.1f}h = {format_currency(amount)}\n"
             else:
-                text += f"├ {key}: {format_currency(amount)}\n"
+                text += f"├ {mission_names.get(key, key)}: {format_currency(amount)}\n"
         
         text += f"└ Subtotale: {format_currency(calculations['totals']['mission'])}\n"
     
