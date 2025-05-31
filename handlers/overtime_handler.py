@@ -130,6 +130,8 @@ async def overtime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             
         db.close()
+    finally:
+        db.close()
 
 async def overtime_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle overtime callbacks"""
