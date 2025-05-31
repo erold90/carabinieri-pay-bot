@@ -380,7 +380,7 @@ async def handle_paid_hours_input(update: Update, context: ContextTypes.DEFAULT_
         current_date = get_current_date()
         
         db = SessionLocal()
-    try:
+        try:
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             # Aggiorna straordinari del mese come pagati
