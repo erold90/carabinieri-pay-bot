@@ -4,7 +4,7 @@ Sistema di notifiche automatiche
 import asyncio
 from datetime import datetime, timedelta, date
 from telegram import Bot
-from sqlalchemy import extract, and_
+from sqlalchemy import extract, and_, func
 
 from database.connection import SessionLocal
 from database.models import User, Leave, Overtime, TravelSheet
