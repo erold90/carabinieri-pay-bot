@@ -931,6 +931,46 @@ async def handle_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
        )
        return SELECT_TIME
 
+def calculate_escort_hours(context):
+    """Calcola automaticamente ore attive e passive per scorte"""
+    user_data = context.user_data
+    
+    # Recupera i tempi salvati
+    departure = user_data.get('departure_time', (0, 0))
+    arrival = user_data.get('arrival_time', (0, 0))
+    return_departure = user_data.get('return_departure', (0, 0))
+    return_arrival = user_data.get('return_arrival', (0, 0))
+    
+    # Calcola ore viaggio attivo (senza VIP)
+    active_hours = 0.0
+    
+    # Andata
+    if arrival[0] >= departure[0]:
+        active_hours += (arrival[0] - departure[0]) + (arrival[1] - departure[1]) / 60
+    else:
+        active_hours += (24 - departure[0] + arrival[0]) + (arrival[1] - departure[1]) / 60
+    
+    # Ritorno (dopo aver lasciato VIP)
+    if return_arrival[0] >= return_departure[0]:
+        active_hours += (return_arrival[0] - return_departure[0]) + (return_arrival[1] - return_departure[1]) / 60
+    else:
+        active_hours += (24 - return_departure[0] + return_arrival[0]) + (return_arrival[1] - return_departure[1]) / 60
+    
+    active_hours = round(active_hours, 1)
+    
+    # Ore passive
+    total_hours = user_data.get('total_hours', 0)
+    overtime_hours = max(0, total_hours - 6)  # 6 ore base
+    passive_hours = round(max(0, overtime_hours - active_hours), 1)
+    
+    # Salva nel context
+    user_data['active_travel_hours'] = active_hours
+    user_data['passive_travel_hours'] = passive_hours
+    
+    return active_hours, passive_hours
+
+
+
 
 async def handle_travel_type_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle all inputs in TRAVEL_TYPE state"""
