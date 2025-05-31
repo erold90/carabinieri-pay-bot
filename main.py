@@ -373,6 +373,7 @@ async def log_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         # logger\.debug\(f"📨 Message update:.*?
     elif update.callback_query:
+        pass
         # logger\.debug\(f"🔘 Callback update:.*?
     elif update.edited_message:
         logger.debug(f"✏️ Edited message update")
