@@ -234,8 +234,21 @@ def main():
     # Initialize database
     init_db()
     
-    # Create the Application
-    application = Application.builder().token(os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))).build()
+    # Create the Application with timeout più lungo
+    application = Application.builder().token(
+        os.getenv('TELEGRAM_BOT_TOKEN', os.getenv('BOT_TOKEN'))
+    ).connect_timeout(30.0).read_timeout(30.0).build()
+    
+    # Pulisci webhook all'avvio per evitare conflitti
+    import asyncio
+    async def cleanup():
+        try:
+            await application.bot.delete_webhook(drop_pending_updates=True)
+            logger.info("Webhook pulito all'avvio")
+        except:
+            pass
+    
+    asyncio.run(cleanup())
     
     # Middleware per pulizia automatica messaggi
     # DEVE essere il PRIMO handler con priority massima
