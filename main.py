@@ -167,6 +167,18 @@ def main():
     
     # Middleware per pulizia automatica messaggi
     # DEVE essere il PRIMO handler con priority massima
+
+    # DEBUG: Log TUTTI gli update ricevuti
+    async def debug_log(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.message:
+            logger.info(f"[DEBUG] Messaggio ricevuto: {update.message.text} da {update.effective_user.id}")
+        elif update.callback_query:
+            logger.info(f"[DEBUG] Callback ricevuto: {update.callback_query.data}")
+        # NON blocca il messaggio, lascia che continui
+    
+    application.add_handler(MessageHandler(filters.ALL, debug_log), group=-100)
+    logger.info("Debug handler registrato")
+    
     # application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, cleanup_middleware), group=999)
 
     application.add_handler(CommandHandler("nuovo", new_service_command))
