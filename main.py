@@ -96,6 +96,8 @@ from handlers.travel_sheet_handler import (
 )
 from handlers.overtime_handler import handle_paid_hours_input
 from handlers.export_handler import generate_excel_export
+from handlers.service_handler import new_service_command
+from handlers.leave_handler import leave_command, add_leave_command, plan_leave_command
 
 # Load environment variables
 load_dotenv()
@@ -351,6 +353,9 @@ async def start_bot(application):
     
     # Start polling con parametri ottimizzati
     logger.info("📡 Avvio polling...")
+    application.add_handler(CommandHandler("licenze", leave_command))
+    application.add_handler(CommandHandler("nuova_licenza", add_leave_command))
+    application.add_handler(CommandHandler("pianifica_licenze", plan_leave_command))
     await application.start()
     await application.updater.start_polling(
         drop_pending_updates=True,
