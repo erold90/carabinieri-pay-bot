@@ -32,15 +32,15 @@ from database.connection import init_db
 # Import tutti gli handler necessari
 from handlers.start_handler import start_command, dashboard_callback
 from handlers.service_handler import (
-    new_service_command, 
+    new_service_command,
     service_conversation_handler,
     handle_service_type,
     handle_status_selection,
     handle_meals,
     handle_mission_type,
     handle_time_input,
-    handle_meal_selection
-    handle_confirmation
+    handle_meal_selection,
+    handle_confirmation,
 )
 from handlers.overtime_handler import (
     overtime_command,
