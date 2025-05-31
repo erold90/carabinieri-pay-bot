@@ -566,6 +566,8 @@ async def handle_leave_value_input(update: Update, context: ContextTypes.DEFAULT
         
         db = SessionLocal()
     try:
+    finally:
+        pass
             user = db.query(User).filter(User.telegram_id == user_id).first()
             
             if 'current_leave_total' in editing_type:
