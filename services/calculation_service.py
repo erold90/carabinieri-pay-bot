@@ -187,6 +187,78 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
     
     return mission
 
+
+
+def get_mission_rates_for_user(user):
+    """Ottieni le tariffe missione corrette per il grado dell'utente"""
+    from config.constants import RANK_CATEGORIES, MISSION_RATES_BY_RANK
+    
+    rank_category = RANK_CATEGORIES.get(user.rank, 'non_dirigente')
+    return MISSION_RATES_BY_RANK[rank_category]
+
+def calculate_mission_with_meals(service, user, total_hours, meals_consumed, meals_documented):
+    """Calcola missione con gestione corretta pasti e riduzioni"""
+    from config.constants import MISSION_REDUCTIONS
+    
+    mission = {}
+    rates = get_mission_rates_for_user(user)
+    
+    # Calcola indennità base
+    if total_hours >= 24:
+        base_allowance = rates['daily_allowance'] * (total_hours / 24)
+    else:
+        base_allowance = rates['hourly_allowance'] * total_hours
+    
+    # Applica riduzioni per pasti
+    reduction_factor = 1.0
+    if meals_documented > 0:
+        if meals_documented >= 2:
+            reduction_factor = MISSION_REDUCTIONS['two_meals']
+        else:
+            reduction_factor = MISSION_REDUCTIONS['one_meal']
+    
+    mission['base_allowance'] = base_allowance
+    mission['reduction_factor'] = reduction_factor
+    mission['reduced_allowance'] = base_allowance * reduction_factor
+    
+    # Rimborso pasti documentati
+    if meals_documented > 0:
+        meal_limit = rates['meal_limit_gross']
+        mission['meal_reimbursement_documented'] = meal_limit * meals_documented
+    
+    # Rimborso pasti non consumati (se applicabile)
+    meals_entitled = 2 if total_hours >= 12 else (1 if total_hours >= 8 else 0)
+    meals_not_consumed = meals_entitled - meals_consumed
+    
+    if meals_not_consumed > 0 and service.mission_type == 'ORDINARY':
+        if meals_not_consumed == 1:
+            mission['meal_reimbursement_not_consumed'] = rates['meal_limit_net']
+        elif meals_not_consumed == 2:
+            mission['meal_reimbursement_not_consumed'] = rates['double_meal_net']
+    
+    return mission
+
+def check_mission_eligibility(service, user, distance_km=None, is_home_location=False):
+    """Verifica se il servizio ha diritto all'indennità di missione"""
+    # Durata minima
+    if service.total_hours < 4:
+        # Solo se notturno (almeno parte tra 22-06)
+        night_start = service.start_time.replace(hour=22, minute=0)
+        night_end = (service.start_time + timedelta(days=1)).replace(hour=6, minute=0)
+        
+        if not (service.start_time < night_end and service.end_time > night_start):
+            return False, "Durata inferiore a 4 ore in orario diurno"
+    
+    # Distanza (se fornita)
+    if distance_km is not None and distance_km <= 10:
+        return False, "Distanza inferiore a 10 km"
+    
+    # Località di dimora abituale
+    if is_home_location:
+        return False, "Servizio nella località di dimora abituale"
+    
+    return True, "Idoneo per indennità di missione"
+
 def calculate_service_total(db: Session, user: User, service: Service) -> dict:
     """
     Calculates ALL net amounts for a service - COMPLETE VERSION
