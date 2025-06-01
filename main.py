@@ -1,5 +1,5 @@
-import asyncio
-import gc
+# import asyncio
+# import gc
 #!/usr/bin/env python
 # Deploy forzato: 2025-05-31 00:49:55
 # -*- coding: utf-8 -*-
@@ -310,11 +310,9 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # Job per garbage collection periodico
-async def periodic_gc(context: ContextTypes.DEFAULT_TYPE):
-    """Esegue garbage collection periodico"""
-    collected = gc.collect()
-    if collected > 0:
-        logger.debug(f"Garbage collection: {collected} oggetti liberati")
+def periodic_gc(context):
+    """Garbage collection periodico"""
+    pass
 
 
 async def cleanup_webhook_on_start(application):
@@ -393,7 +391,7 @@ async def debug_middleware(update, context):
         logger.info(f"   Da: {update.effective_user.username}")
 
 
-async def main():
+def main():
     """Start the bot."""
     # Initialize database
     try:
@@ -492,31 +490,25 @@ async def main():
     # Start the bot
     log_info("Avvio CarabinieriPayBot...")
     
-    # Run polling
+    # Run polling senza asyncio
     application.run_polling(
         drop_pending_updates=True,
-        allowed_updates=None,
-        close_loop=False
+        allowed_updates=None
     )
+
+
+
 if __name__ == '__main__':
-    import asyncio
     import sys
     
+    # Setup logging
+    logger = setup_logging()
+    
+    # Load environment
+    load_dotenv()
+    
     try:
-        # Per Windows
-        if sys.platform == 'win32':
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        
-        # Prova a usare asyncio.run
-        asyncio.run(main())
-    except RuntimeError as e:
-        if "This event loop is already running" in str(e):
-            # Railway potrebbe avere un event loop già attivo
-            print("⚠️ Event loop già attivo, uso alternativo...")
-            loop = asyncio.get_event_loop()
-            loop.create_task(main())
-        else:
-            raise
+        main()
     except KeyboardInterrupt:
         print("\n👋 Bot fermato dall'utente")
     except Exception as e:
