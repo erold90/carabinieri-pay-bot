@@ -534,10 +534,27 @@ async def handle_mission_type(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['mission_type'] = mission_type
     
     if mission_type == "FORFEIT":
-        # Forfeit doesn't need meal details
-        return await show_service_summary(update, context)
+        # Per forfettario, chiedi se continua il giorno dopo
+        text = "💰 <b>REGIME FORFETTARIO</b>\n\n"
+        text += "Il servizio continua anche domani?\n\n"
+        text += "📌 Info: €110 netti/24h + €50 per 12-24h extra"
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Sì, continua", callback_data="forfeit_continues_yes"),
+                InlineKeyboardButton("❌ No, termina oggi", callback_data="forfeit_continues_no")
+            ]
+        ]
+        
+        await query.edit_message_text(
+            text,
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        
+        return CONFIRM_SERVICE
     else:
-        # Ask about meals
+        # Ask about meals for ordinary
         total_hours = context.user_data['total_hours']
         meals_entitled = 0
         
@@ -557,7 +574,6 @@ async def handle_mission_type(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         
         return CONFIRM_SERVICE
-
 async def handle_meals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle meal selection"""
     query = update.callback_query
@@ -1074,6 +1090,112 @@ async def handle_meal_selection(update: Update, context: ContextTypes.DEFAULT_TY
 
 # Create conversation handler
 
+
+
+async def handle_second_day_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle second day payment type"""
+    query = update.callback_query
+    await query.answer()
+    
+    second_day_type = "FORFEIT" if "forfeit" in query.data else "ORDINARY"
+    context.user_data['second_day_type'] = second_day_type
+    
+    # Procedi al riepilogo finale
+    return await show_service_summary(update, context)
+
+async def handle_forfeit_continuation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle forfeit continuation choice"""
+    query = update.callback_query
+    await query.answer()
+    
+    continues = query.data == "forfeit_continues_yes"
+    context.user_data['forfeit_continues'] = continues
+    
+    if continues:
+        # Chiedi dettagli del giorno successivo
+        text = "📅 <b>SERVIZIO GIORNO SUCCESSIVO</b>\n\n"
+        text += "A che ora termina il servizio domani?\n"
+        text += "(Inserisci orario in formato HH:MM)"
+        
+        await query.edit_message_text(text, parse_mode='HTML')
+        context.user_data['waiting_for_next_day_end'] = True
+        
+        return CONFIRM_SERVICE
+    else:
+        # Procedi al riepilogo
+        return await show_service_summary(update, context)
+
+async def handle_next_day_end_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle next day end time input"""
+    if not context.user_data.get('waiting_for_next_day_end'):
+        return
+    
+    text = update.message.text.strip()
+    hour, minute = validate_time_input(text)
+    
+    if hour is None:
+        await update.message.reply_text(
+            "❌ Formato non valido! Usa HH:MM (es: 20:00)",
+            parse_mode='HTML'
+        )
+        return CONFIRM_SERVICE
+    
+    # Calcola orario fine del giorno successivo
+    service_date = context.user_data['service_date']
+    next_day = service_date + timedelta(days=1)
+    next_day_end = datetime.combine(next_day, time(hour, minute))
+    
+    # Aggiorna orario fine e ore totali
+    context.user_data['original_end_time'] = context.user_data['end_time']
+    context.user_data['end_time'] = next_day_end
+    
+    # Ricalcola ore totali
+    start_time = context.user_data['start_time']
+    total_hours = (next_day_end - start_time).total_seconds() / 3600
+    context.user_data['total_hours'] = total_hours
+    context.user_data['forfeit_days'] = 2  # Servizio su 2 giorni
+    
+    context.user_data['waiting_for_next_day_end'] = False
+    
+    # Mostra riepilogo
+    text = f"✅ <b>SERVIZIO FORFETTARIO 2 GIORNI</b>\n\n"
+    text += f"Inizio: {start_time.strftime('%d/%m %H:%M')}\n"
+    text += f"Fine: {next_day_end.strftime('%d/%m %H:%M')}\n"
+    text += f"Totale: {total_hours:.0f} ore\n\n"
+    
+    # Calcola forfettario
+    if total_hours >= 24:
+        forfeit_amount = 110.00  # Prime 24h
+        if total_hours >= 36:  # Più di 1.5 giorni
+            forfeit_amount += 110.00  # Altre 24h
+        elif total_hours > 24:  # Tra 24 e 36 ore
+            forfeit_amount += 50.00  # 12-24h extra
+    else:
+        forfeit_amount = 50.00 if total_hours >= 12 else 0
+    
+    text += f"💰 Forfettario: € {forfeit_amount:.2f} netti\n\n"
+    
+    context.user_data['forfeit_amount'] = forfeit_amount
+    
+    # Chiedi se procede con altro forfettario o termina
+    text += "Il secondo giorno è ancora forfettario?"
+    
+    keyboard = [
+        [
+            InlineKeyboardButton("💰 Sì, forfettario", callback_data="second_day_forfeit"),
+            InlineKeyboardButton("📋 No, ordinario", callback_data="second_day_ordinary")
+        ]
+    ]
+    
+    await update.message.reply_text(
+        text,
+        parse_mode='HTML',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    
+    return CONFIRM_SERVICE
+
+
 service_conversation_handler = ConversationHandler( entry_points=[
         CommandHandler("nuovo", new_service_command),
         CommandHandler("scorta", new_service_command),
@@ -1110,7 +1232,10 @@ service_conversation_handler = ConversationHandler( entry_points=[
             CallbackQueryHandler(handle_confirmation, pattern="^confirm_")
         ]
     },
-    fallbacks=[CommandHandler("start", start_command)],
+    fallbacks=[CommandHandler("start", start_command),
+            CallbackQueryHandler(handle_forfeit_continuation, pattern="^forfeit_continues_"),
+            CallbackQueryHandler(handle_second_day_type, pattern="^second_day_"),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_next_day_end_time)],
     )
 
 # ------------------------------

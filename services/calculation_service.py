@@ -148,6 +148,23 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
     mission = {}
     
     if service.mission_type == 'FORFEIT':
+        
+        # Gestione forfettario multi-giorno
+        forfeit_days = getattr(service, 'forfeit_days', 1)
+        
+        if forfeit_days > 1:
+            # Calcolo per servizi multi-giorno
+            if total_hours >= 24:
+                num_24h = int(total_hours // 24)
+                rem_hours = total_hours % 24
+                
+                forfeit_amount = num_24h * FORFEIT_RATES['24h']
+                if rem_hours >= 12:
+                    forfeit_amount += FORFEIT_RATES['12h_extra']
+            else:
+                # Meno di 24h totali
+                forfeit_amount = FORFEIT_RATES['12h_extra'] if total_hours >= 12 else 0
+        else:
         # Forfettario
         num_24h = int(total_hours // 24)
         rem_hours = total_hours % 24
