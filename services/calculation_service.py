@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import holidays
 
 from database.models import User, Service, Overtime, OvertimeType, ServiceType
-from config.constants import OVERTIME_RATES, FUEL_REIMBURSEMENT, SERVICE_ALLOWANCES, MISSION_RATES, FORFEIT_RATES, MEAL_RATES, SUPER_HOLIDAYS
+from config.constants import OVERTIME_RATES, FUEL_REIMBURSEMENT, SERVICE_ALLOWANCES, MISSION_RATES, FORFEIT_RATES, MEAL_RATES, SUPER_HOLIDAYS, TRAVEL_HOURLY_RATE
 
 def calculate_easter(year):
     """Calcola la data di Pasqua per un dato anno usando l'algoritmo di Gauss"""
@@ -313,7 +313,7 @@ def calculate_service_total(db: Session, user: User, service: Service) -> dict:
         active_hours = service.active_travel_hours or 0
         if active_hours > 0:
             # Le ore attive vanno pagate come maggiorazione, non straordinario
-            calculations['mission']['active_travel'] = active_hours * MISSION_RATES['travel_hourly']
+            calculations['mission']['active_travel'] = active_hours * TRAVEL_HOURLY_RATE
             # Riduci le ore extra totali delle ore attive
             extra_hours = max(0, extra_hours - active_hours)
         

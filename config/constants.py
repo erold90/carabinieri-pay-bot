@@ -36,7 +36,8 @@ MISSION_RATES_BY_RANK = {
         'meal_limit_net': 14.29,
         'double_meal_gross': 44.52,
         'double_meal_net': 28.58
-    },
+    ,
+        'travel_hourly': 8.00},
     # Dirigenti fino a Gen. Brigata
     'dirigente_base': {
         'daily_allowance': 20.45,
@@ -45,7 +46,8 @@ MISSION_RATES_BY_RANK = {
         'meal_limit_net': 19.61,
         'double_meal_gross': 61.10,
         'double_meal_net': 39.22
-    },
+    ,
+        'travel_hourly': 8.00},
     # Gen. Divisione
     'dirigente_divisione': {
         'daily_allowance': 24.12,
@@ -54,7 +56,8 @@ MISSION_RATES_BY_RANK = {
         'meal_limit_net': 19.61,
         'double_meal_gross': 61.10,
         'double_meal_net': 39.22
-    },
+    ,
+        'travel_hourly': 8.00},
     # Gen. C.A.
     'dirigente_ca': {
         'daily_allowance': 28.82,
@@ -164,7 +167,12 @@ IRPEF_BRACKETS = [
 ]
 
 # Vecchie costanti per retrocompatibilità
+
+# Tariffa oraria per viaggi attivi (€8/ora)
+TRAVEL_HOURLY_RATE = 8.00
+
 MISSION_RATES = MISSION_RATES_BY_RANK['non_dirigente']
+MISSION_RATES['travel_hourly'] = TRAVEL_HOURLY_RATE
 MEAL_RATES = {
     'single_meal_gross': MISSION_RATES_BY_RANK['non_dirigente']['meal_limit_gross'],
     'single_meal_net': MISSION_RATES_BY_RANK['non_dirigente']['meal_limit_net'],
