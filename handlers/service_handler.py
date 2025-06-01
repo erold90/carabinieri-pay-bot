@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from database.connection import SessionLocal, get_db
 from database.models import User, Service, ServiceType, TravelSheet
+from utils.validators import validate_time_input
 from config.settings import (
     SELECT_DATE, SELECT_TIME, SELECT_SERVICE_TYPE, SERVICE_DETAILS,
     TRAVEL_DETAILS, TRAVEL_TYPE, MEAL_DETAILS, CONFIRM_SERVICE
