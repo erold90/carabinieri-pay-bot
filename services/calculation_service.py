@@ -148,8 +148,7 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
     mission = {}
     
     if service.mission_type == 'FORFEIT':
-        
-        # Gestione forfettario multi-giorno
+        # Forfettario
         forfeit_days = getattr(service, 'forfeit_days', 1)
         
         if forfeit_days > 1:
@@ -165,13 +164,13 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
                 # Meno di 24h totali
                 forfeit_amount = FORFEIT_RATES['12h_extra'] if total_hours >= 12 else 0
         else:
-            # Forfettario standard
-        num_24h = int(total_hours // 24)
-        rem_hours = total_hours % 24
-        
-        forfeit_amount = num_24h * FORFEIT_RATES['24h']
-        if rem_hours >= 12:
-            forfeit_amount += FORFEIT_RATES['12h_extra']
+            # Forfettario standard (singolo giorno)
+            num_24h = int(total_hours // 24)
+            rem_hours = total_hours % 24
+            
+            forfeit_amount = num_24h * FORFEIT_RATES['24h']
+            if rem_hours >= 12:
+                forfeit_amount += FORFEIT_RATES['12h_extra']
         
         mission['forfeit'] = forfeit_amount
     else:
@@ -201,7 +200,6 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
                 mission['meal_reimbursement'] = MEAL_RATES['single_meal_net']
             elif meals_not_consumed == 2:
                 mission['meal_reimbursement'] = MEAL_RATES['double_meal_net']
-    
     return mission
 
 
