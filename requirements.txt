@@ -12,3 +12,5 @@ seaborn==0.13.0
 holidays==0.35
 
 nest_asyncio==1.5.8
+
+psutil==5.9.6

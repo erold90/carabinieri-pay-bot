@@ -1074,7 +1074,7 @@ async def handle_meal_selection(update: Update, context: ContextTypes.DEFAULT_TY
 
 # Create conversation handler
 
-service_conversation_handler = ConversationHandler(per_message=True, entry_points=[
+service_conversation_handler = ConversationHandler( entry_points=[
         CommandHandler("nuovo", new_service_command),
         CommandHandler("scorta", new_service_command),
         CallbackQueryHandler(new_service_command, pattern="^dashboard_new_")

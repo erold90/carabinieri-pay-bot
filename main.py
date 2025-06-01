@@ -502,18 +502,24 @@ if __name__ == '__main__':
     import asyncio
     import sys
     
-    # Per Python 3.11 e Railway
-    if sys.platform == 'win32':
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    
     try:
+        # Per Windows
+        if sys.platform == 'win32':
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
+        # Prova a usare asyncio.run
         asyncio.run(main())
     except RuntimeError as e:
         if "This event loop is already running" in str(e):
-            # Fallback per ambienti con event loop già attivo
-            import nest_asyncio
-            nest_asyncio.apply()
+            # Railway potrebbe avere un event loop già attivo
+            print("⚠️ Event loop già attivo, uso alternativo...")
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(main())
+            loop.create_task(main())
         else:
             raise
+    except KeyboardInterrupt:
+        print("\n👋 Bot fermato dall'utente")
+    except Exception as e:
+        print(f"❌ Errore critico: {e}")
+        import traceback
+        traceback.print_exc()
