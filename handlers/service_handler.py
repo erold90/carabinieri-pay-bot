@@ -850,7 +850,7 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     return ConversationHandler.END
 
-# Create conversation handler
+
 async def handle_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
    """Handle manual time input from user"""
    text = update.message.text.strip()
@@ -1071,6 +1071,8 @@ async def handle_meal_selection(update: Update, context: ContextTypes.DEFAULT_TY
         parse_mode='HTML',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+
+# Create conversation handler
 
 service_conversation_handler = ConversationHandler(per_message=True, entry_points=[
         CommandHandler("nuovo", new_service_command),
