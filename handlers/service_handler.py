@@ -4,6 +4,7 @@ Service registration handler
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from datetime import datetime, timedelta, time, date
+import re
 from sqlalchemy.orm import Session
 
 from database.connection import SessionLocal, get_db
