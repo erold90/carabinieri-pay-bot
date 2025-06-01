@@ -1114,8 +1114,3 @@ service_conversation_handler = ConversationHandler(per_message=True, entry_point
 # ------------------------------
 # Stub autocreato: mancante `service_conversation_handler`
 # ------------------------------
-async def service_conversation_handler(update, context):
-    """Funzione `service_conversation_handler` inserita automaticamente perché mancava."""
-    await update.message.reply_text(
-        "🚧 La conversazione di servizio non è ancora implementata."
-    )
