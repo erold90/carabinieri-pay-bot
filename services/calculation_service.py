@@ -165,7 +165,7 @@ def calculate_mission_allowances(service: Service, total_hours: float) -> dict:
                 # Meno di 24h totali
                 forfeit_amount = FORFEIT_RATES['12h_extra'] if total_hours >= 12 else 0
         else:
-        # Forfettario
+            # Forfettario standard
         num_24h = int(total_hours // 24)
         rem_hours = total_hours % 24
         
