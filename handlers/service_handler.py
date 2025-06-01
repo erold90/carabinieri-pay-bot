@@ -1,11 +1,29 @@
 """
 Service registration handler
 """
-import re
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from datetime import datetime, timedelta, time, date
 from sqlalchemy.orm import Session
+
+from database.connection import SessionLocal, get_db
+from database.models import User, Service, ServiceType, TravelSheet
+from config.settings import (
+    SELECT_DATE, SELECT_TIME, SELECT_SERVICE_TYPE, SERVICE_DETAILS,
+    TRAVEL_DETAILS, TRAVEL_TYPE, MEAL_DETAILS, CONFIRM_SERVICE
+)
+from config.constants import SUPER_HOLIDAYS, OVERTIME_RATES, MEAL_RATES
+from utils.keyboards import (
+    get_date_keyboard, get_time_keyboard, get_service_type_keyboard,
+    get_yes_no_keyboard, get_mission_type_keyboard, get_meal_keyboard,
+    get_confirm_keyboard
+)
+from utils.formatters import format_currency, format_date, format_time_range, format_hours
+from utils.validators import validate_time_input
+from services.calculation_service import (
+    is_holiday, is_super_holiday, calculate_service_total
+)
+from handlers.start_handler import start_command
 
 from database.connection import SessionLocal, get_db
 from database.models import User, Service, ServiceType, TravelSheet
